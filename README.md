@@ -14,9 +14,15 @@ occupée avec un projet d'extension. Un bien n'a donc pas forcément de revenu.
 français et anglais, application installable, socle du moteur de calcul sous tests,
 CI bloquante.
 
-**Lot 1 · Moteur de calcul — à faire.** Les primitives sont là (centimes, taux,
-mois, annuité) ; il reste le tableau d'amortissement complet, les récurrences, la
-projection et les indicateurs.
+**Lot 1 · Moteur de calcul — livré.** Tableau d'amortissement complet (annuités
+ou capital constant, différé partiel ou total, assurances dans les quatre modes,
+remboursements anticipés avec les quatre régimes d'indemnité, périodes de taux
+multiples), dépliage des récurrences et de l'indexation, série de loyers,
+projection mensuelle, dix-huit indicateurs, comparaison de scénarios.
+114 tests, dont la calibration sur le tableau BNP réel.
+
+**Lot 2 · Saisie — à faire.** Rien ne lit encore le moteur : il faut l'adaptateur
+qui mappe les lignes de base vers `ProjectionInput`, puis les écrans.
 
 ## Démarrer
 
@@ -71,11 +77,35 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
    base ni dans le moteur. Les taux sont des entiers en ppm (`3,5 % → 35 000`).
 5. **Toute requête est filtrée par appartenance** via `property_member`, dès la
    première ligne de code d'accès aux données.
-6. **Le taux mensuel se déduit du taux annuel par équivalence** —
-   `(1 + i)^(1/12) − 1`, pas `i / 12`. C'est la convention du crédit hypothécaire
-   belge : sur 200 000 € à 3,5 % sur 20 ans, l'autre convention se trompe de
-   1 353,60 € de coût total. Le champ `rate_basis` permet les deux, `equivalent`
-   est le défaut.
+6. **La conversion du taux annuel en taux mensuel est un paramètre du contrat,
+   pas une règle universelle.** Deux conventions existent : l'équivalence
+   `(1 + i)^(1/12) − 1` et le douzième `i / 12`. L'écart n'est pas cosmétique —
+   sur 200 000 € à 3,5 % sur 20 ans il vaut 1 353,60 € de coût total — donc le
+   champ `rate_basis` porte les deux et **il faut le lire sur le tableau de la
+   banque, jamais le supposer**.
+
+   Le tableau BNP réel du 31/08/2023 utilise **`i / 12` à 3,06 %** : intérêts du
+   premier mois de 382,50 € sur 150 000 €, soit exactement 0,255 % mensuel.
+   `nominal_12` est donc le défaut. Le test de calibration
+   (`src/engine/calibration.test.ts`) rejoue les 241 lignes des deux prêts et
+   échoue si le moteur dévie de plus de deux centimes sur les intérêts d'une
+   ligne ou d'un euro sur le total.
+
+## Le moteur
+
+`src/engine/` est une bibliothèque pure : aucun import de React, de Drizzle ou de
+`next/*`. Trois couches, sans cycle :
+
+| Couche | Modules | Rôle |
+| --- | --- | --- |
+| Primitives | `money` `rate` `month` | centimes entiers, taux en ppm, index de mois |
+| Contrat | `types` | les types d'entrée et de sortie, et rien d'autre |
+| Calcul | `annuity` `schedule` `recurrence` `rent` `projection` `indicators` `compare` | une préoccupation par module |
+| Façade | `index` | le barrel et `runProjection()` |
+
+`runProjection(input)` est le seul point d'entrée dont l'UI aura besoin. Le lot 2
+ajoutera un adaptateur base → `ProjectionInput` ; le moteur ne connaîtra jamais le
+schéma.
 
 ## Stack
 

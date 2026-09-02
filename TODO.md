@@ -6,13 +6,17 @@ abandonné avec Eric.
 
 ## Bloquant
 
-- [ ] **Q12 · Tableau d'amortissement de la banque** — à fournir par Eric.
-      C'est le jeu de test de référence du moteur : le lot 1 ne peut pas être
-      déclaré terminé sans un test qui rejoue ce tableau au centime, arrondis
-      et prorata du premier mois compris.
-- [ ] **Chiffres réels du bien A** — capital, date de première échéance, durée,
-      taux, mode d'assurance (ASRD / incendie), revenu cadastral, précompte
-      immobilier actuel, loyer visé.
+- [x] ~~**Q12 · Tableau d'amortissement de la banque**~~ — fourni le 02/09/2026
+      (BNP Paribas Fortis, 31/08/2023). Deux prêts sur le même bien, 150 000 € et
+      27 750 €, tous deux à 3,06 % sur 241 mois. Extrait en fixture de test dans
+      `src/engine/__fixtures__/bnp-2023-08-31.json` et rejoué par
+      `src/engine/calibration.test.ts`. Le PDF source reste dans `.idea/`, qui est
+      gitignoré.
+      **Conséquence :** BNP calcule le taux mensuel en `taux annuel / 12`, pas par
+      équivalence. Le défaut de `rate_basis` est passé à `nominal_12`.
+- [ ] **Chiffres restants du bien A** — revenu cadastral, précompte immobilier
+      actuel, loyer visé, et le mode de prime des assurances (ASRD, incendie).
+      Nécessaires pour encoder le bien au lot 2, pas pour le moteur.
 - [ ] **Taux marginal d'imposition** — nécessaire au rendement net-net.
       Défaut provisoire : 50 %, affiché comme hypothèse modifiable.
 
@@ -31,6 +35,18 @@ abandonné avec Eric.
 - [ ] **Q24 · Calcul fiscal IPP automatique** — RC indexé × 1,4, taux marginal,
       additionnels communaux, chèque habitat. V1 : champ manuel assisté.
       → V2. La fiscalité belge du logement bouge tous les deux ans.
+
+## Relevé dans le contrat BNP, hors périmètre
+
+- [ ] **Prorata temporis de la première échéance.** BNP précise que les premiers
+      intérêts sont calculés au nombre de jours entre la conclusion du crédit et
+      la première échéance. Le tableau fourni montre la version pleine, et le
+      moteur fait pareil. Sans incidence sur une prévision à vingt ans.
+- [ ] **Période de prélèvement.** Crédit à prélèvements progressifs : si le crédit
+      est moins prélevé que ce que le tableau prévoit, l'amortissement du capital
+      est suspendu et la part capital devient exigible au prélèvement suivant.
+      À modéliser seulement si l'extension du bien B passe par un crédit du même
+      type.
 
 ## Backlog
 

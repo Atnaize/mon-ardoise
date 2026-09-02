@@ -1,0 +1,1 @@
+ALTER TABLE "loan_rate_period" ALTER COLUMN "rate_basis" SET DEFAULT 'nominal_12';

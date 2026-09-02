@@ -132,8 +132,8 @@ chaîne pour éviter les décalages de fuseau.
 | `property` | le bien | `status` (preparing / rented / occupied), `cadastral_income`, `marginal_tax_rate_ppm`, `estimated_tax_yearly`, `horizon_years` |
 | `property_member` | accès **et** quote-part | `role`, `ownership_share_permille`, `contribution_share_permille` |
 | `invitation` | partage d'un bien | `email` ou `code`, `role`, `expires_at` |
-| `loan` | un par crédit | `principal`, `term_months`, `amortization`, `deferral_months`, `deferral_type` |
-| `loan_rate_period` | une ligne si taux fixe | `start_month`, `annual_rate_ppm`, `rate_basis` |
+| `loan` | un par crédit — le prêt hypothécaire et le mandat sont deux lignes | `principal`, `term_months`, `amortization`, `deferral_months`, `deferral_type` |
+| `loan_rate_period` | une ligne si taux fixe | `start_month`, `annual_rate_ppm`, `rate_basis` (défaut `nominal_12`) |
 | `loan_insurance` | ASRD, incendie, autre | `premium_mode` (dans la mensualité / annuelle / trimestrielle / unique financée) |
 | `loan_prepayment` | remboursement anticipé | `penalty_mode`, `penalty_value` (défaut 3 mois), `effect` |
 | `flow_line` | tout frais, tout revenu | `recurrence`, `indexation_rate_ppm`, `capitalize`, `amortization_years` |
@@ -171,21 +171,47 @@ compare(baseline, variant) → Delta
 
 ### Le détail qui fait dériver tous les simulateurs amateurs
 
-En crédit hypothécaire belge, le taux annuel du contrat se convertit en taux
-mensuel **équivalent**, pas en douzième :
+Deux conventions existent pour passer du taux annuel au taux mensuel :
 
 ```
-i_mensuel = (1 + i_annuel)^(1/12) − 1      et non      i_annuel / 12
+équivalence :  i_mensuel = (1 + i_annuel)^(1/12) − 1
+douzième :     i_mensuel = i_annuel / 12
 ```
 
-Sur 200 000 € à 3,5 % sur 20 ans, l'écart est de **1 353,60 € de coût total** et
-de 5,64 € sur la mensualité — 1 154,28 € contre 1 159,92 €. Chiffres produits par
-le moteur, pas estimés. Assez pour que l'app ne dise pas la même chose que la
-banque, et pour cesser de lui faire confiance.
+L'écart n'est pas cosmétique : sur 200 000 € à 3,5 % sur 20 ans il vaut
+**1 353,60 € de coût total** et 5,64 € sur la mensualité — 1 154,28 € contre
+1 159,92 €. Chiffres produits par le moteur, pas estimés.
 
-Le champ `rate_basis` permet les deux conventions, `equivalent` est le défaut. Le
-premier test du lot 1 rejouera le tableau d'amortissement réel ligne par ligne,
-arrondis compris.
+**Correction de la v1 de ce document**, qui affirmait que l'équivalence était *la*
+convention belge et en faisait le défaut. Le tableau BNP Paribas Fortis réel du
+31/08/2023 utilise **le douzième, à 3,06 %** : intérêts du premier mois de
+382,50 € sur 150 000 €, soit exactement 0,255 % mensuel. Sous l'équivalence il
+aurait fallu un taux annuel de 3,10336 %, que personne ne rédige dans un contrat.
+
+La leçon tient dans le schéma : `rate_basis` porte les deux conventions et **se
+lit sur le tableau de la banque, jamais ne se suppose**. `nominal_12` est
+désormais le défaut. Le champ `rounding_mode` que prévoyait la v1 s'est révélé
+inutile : l'arrondi au centime le plus proche reproduit la mensualité BNP
+exactement.
+
+### Calibration sur le tableau réel
+
+Deux prêts sur le même bien, tous deux à 3,06 % sur 241 mois — un prêt
+hypothécaire et un mandat hypothécaire :
+
+| | Capital | Mensualité | Intérêts du 1er mois | Intérêts totaux |
+| --- | --- | --- | --- | --- |
+| Prêt hypothécaire | 150 000,00 € | 833,89 € | 382,50 € | 50 967,49 € |
+| Mandat hypothécaire | 27 750,00 € | 154,27 € | 70,76 € | 9 429,07 € |
+
+Le moteur reproduit exactement le nombre d'échéances, la mensualité, la première
+ligne et le solde final nul. La dérive résiduelle vient de l'ordre d'arrondi
+interne de BNP : au plus **2 centimes sur les intérêts d'une ligne** et
+**0,73 € sur les 50 967,49 € d'intérêts** du prêt principal, soit 0,0014 %.
+Chercher la réplication au centime près n'a pas de valeur pour de la prévision.
+
+`src/engine/calibration.test.ts` rejoue les 482 lignes et échoue au-delà de ces
+tolérances.
 
 ---
 
@@ -230,8 +256,8 @@ chiffres faux.
 | Lot | Contenu | État |
 | --- | --- | --- |
 | **0 · Fondations** | Repo, Next 16 + TS strict, Tailwind 4, Neon + Drizzle, better-auth Google, next-intl fr/en, manifest PWA, CI bloquante | **Livré** |
-| **1 · Moteur de calcul** | Tableau d'amortissement complet, différé, assurances, remboursements anticipés, récurrences, indexation, projection, indicateurs. Aucune interface | **En cours** — primitives posées et testées |
-| 2 · Saisie | CRUD bien, prêts, lignes, bail. Assistant trois étapes. Synthèse | À faire |
+| **1 · Moteur de calcul** | Tableau d'amortissement complet, différé, assurances, remboursements anticipés, récurrences, indexation, projection, indicateurs, comparaison. Aucune interface | **Livré** — 114 tests, calibré sur le tableau BNP |
+| 2 · Saisie | Adaptateur base → `ProjectionInput`, CRUD bien, prêts, lignes, bail. Assistant trois étapes. Synthèse | **Suivant** |
 | 3 · Restitution | Timeline, vue annuelle, graphiques, tous les indicateurs | À faire |
 | 4 · Scénarios | Duplication, substitution d'hypothèses, comparaison côte à côte | À faire |
 | 5 · Réel vs prévu | Saisie rapide mobile, rapprochement, écrans d'écart | À faire |
@@ -240,10 +266,15 @@ chiffres faux.
 | 8 · Finitions | Hors-ligne, anglais complet, accessibilité, budget de perf mobile | À faire |
 
 **Livré au lot 0 :** `/` redirige vers `/fr`, les deux langues rendent, manifest
-et icônes servis, 26 tests verts, build et lint propres.
+et icônes servis, build et lint propres.
 
-**Lot 1, ce qui est déjà là :** centimes entiers avec répartition sans perte,
-taux en ppm, index de mois, mensualité en annuités sur la convention belge.
+**Livré au lot 1 :** annuités et capital constant, différé partiel et total,
+assurances dans les quatre modes de prime, remboursements anticipés dans les
+quatre régimes d'indemnité et les deux effets, périodes de taux multiples — donc
+le taux variable ne demande plus que de l'UI. Dépliage des récurrences avec
+indexation composée, étalement des frais capitalisés sans perte de centime,
+séries de loyers avec vacance, projection mensuelle, dix-huit indicateurs,
+comparaison de scénarios.
 
 ---
 
@@ -252,13 +283,25 @@ taux en ppm, index de mois, mensualité en annuités sur la convention belge.
 Tenu à jour dans [TODO.md](../TODO.md) à la racine, avec le numéro de la question
 de cadrage d'origine.
 
-Trois éléments bloquent la clôture du lot 1 :
+Le tableau d'amortissement a été fourni et sert de test de calibration. Il reste
+à réunir, pour encoder le bien au lot 2 :
 
-1. **Le tableau d'amortissement de la banque** — le jeu de test de référence.
-2. **Les chiffres réels du bien A** — capital, date de première échéance, durée,
-   taux, mode d'assurance, revenu cadastral, précompte actuel, loyer visé.
+1. **Revenu cadastral, précompte immobilier actuel, loyer visé.**
+2. **Le mode d'assurance** — ASRD et incendie, prime dans la mensualité,
+   annuelle, trimestrielle ou unique financée.
 3. **Le taux marginal d'imposition** — pour le rendement net-net. Défaut
    provisoire : 50 %, affiché comme hypothèse modifiable.
+
+Deux points relevés dans le contrat BNP et volontairement hors périmètre :
+
+- **Prorata temporis de la première échéance.** BNP précise que les premiers
+  intérêts sont calculés au nombre de jours entre la conclusion du crédit et la
+  première échéance. Le tableau fourni montre la version « pleine ». Sans
+  incidence sur une prévision à vingt ans.
+- **Période de prélèvement.** Le crédit est à prélèvements progressifs : si le
+  crédit est moins prélevé que ce que le tableau prévoit, l'amortissement du
+  capital est suspendu. Modélisable plus tard si l'extension du bien B passe par
+  un crédit du même type.
 
 ---
 

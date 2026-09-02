@@ -136,7 +136,7 @@ export const loanRatePeriod = pgTable(
       .references(() => loan.id, { onDelete: "cascade" }),
     startMonth: integer("start_month").notNull().default(0),
     annualRatePpm: integer("annual_rate_ppm").notNull(),
-    rateBasis: rateBasisEnum("rate_basis").notNull().default("equivalent"),
+    rateBasis: rateBasisEnum("rate_basis").notNull().default("nominal_12"),
   },
   (t) => [unique().on(t.loanId, t.startMonth)],
 );

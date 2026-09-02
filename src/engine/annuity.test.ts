@@ -6,16 +6,16 @@ import { percentToPpm } from "./rate";
 
 describe("annuityPayment", () => {
   it("spreads the principal evenly when the rate is zero", () => {
-    expect(annuityPayment(eurosToCents(100_000), 100, 0)).toBe(eurosToCents(1_000));
+    expect(annuityPayment(eurosToCents(100_000), 100, 0, "nominal_12")).toBe(eurosToCents(1_000));
   });
 
   it("rejects a non-positive term", () => {
-    expect(() => annuityPayment(eurosToCents(100_000), 0, percentToPpm(3.5))).toThrow();
+    expect(() => annuityPayment(eurosToCents(100_000), 0, percentToPpm(3.5), "nominal_12")).toThrow();
   });
 
   it("charges only interest on a single-month term", () => {
     const principal = eurosToCents(100_000);
-    const payment = annuityPayment(principal, 1, percentToPpm(3.5));
+    const payment = annuityPayment(principal, 1, percentToPpm(3.5), "nominal_12");
 
     expect(payment).toBeGreaterThan(principal);
     expect(payment - principal).toBeLessThan(eurosToCents(300));

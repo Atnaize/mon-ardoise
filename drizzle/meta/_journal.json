@@ -15,6 +15,13 @@
       "when": 1788355956841,
       "tag": "0001_account_issuer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788357468736,
+      "tag": "0002_rate_basis_default",
+      "breakpoints": true
     }
   ]
 }

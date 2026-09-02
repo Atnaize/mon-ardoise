@@ -24,6 +24,14 @@ export function monthlyRate(annualPpm: Ppm, basis: RateBasis): number {
   return Math.pow(1 + annual, 1 / 12) - 1;
 }
 
+export function ratioToPpm(numerator: number, denominator: number): Ppm | null {
+  if (denominator <= 0) {
+    return null;
+  }
+
+  return Math.round((numerator / denominator) * 1_000_000);
+}
+
 export function formatPercent(ppm: Ppm, locale: string): string {
   return new Intl.NumberFormat(locale, {
     style: "percent",

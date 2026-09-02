@@ -1,0 +1,159 @@
+import type { Cents } from "./money";
+import type { Ppm, RateBasis } from "./rate";
+import type { YearMonth } from "./month";
+
+export type Amortization = "annuity" | "constant_principal";
+export type DeferralType = "none" | "interest_only" | "full";
+export type InsuranceKind = "outstanding_balance" | "fire" | "other";
+export type PremiumMode = "in_payment" | "annual" | "quarterly" | "single_financed";
+export type PenaltyMode = "months_of_interest" | "percent" | "fixed" | "none";
+export type PrepaymentEffect = "reduce_term" | "reduce_payment";
+export type FlowKind = "expense" | "income";
+export type AmountMode = "fixed" | "percent_of_rent";
+export type Recurrence = "one_off" | "monthly" | "quarterly" | "yearly" | "every_n_years";
+export type TaxMode = "monthly_provision" | "yearly";
+
+export interface RatePeriod {
+  startMonth: number;
+  annualRatePpm: Ppm;
+  basis: RateBasis;
+}
+
+export interface Insurance {
+  kind: InsuranceKind;
+  premiumMode: PremiumMode;
+  amount: Cents;
+  startMonth?: YearMonth | null;
+  endMonth?: YearMonth | null;
+}
+
+export interface Prepayment {
+  month: YearMonth;
+  amount: Cents;
+  penaltyMode: PenaltyMode;
+  penaltyValue: number;
+  effect: PrepaymentEffect;
+}
+
+export interface Loan {
+  id: string;
+  label: string;
+  principal: Cents;
+  startMonth: YearMonth;
+  termMonths: number;
+  amortization: Amortization;
+  deferralMonths: number;
+  deferralType: DeferralType;
+  ratePeriods: RatePeriod[];
+  insurances: Insurance[];
+  prepayments: Prepayment[];
+}
+
+export interface Installment {
+  month: YearMonth;
+  openingBalance: Cents;
+  payment: Cents;
+  interest: Cents;
+  principal: Cents;
+  insurance: Cents;
+  prepayment: Cents;
+  penalty: Cents;
+  closingBalance: Cents;
+}
+
+export interface Schedule {
+  loanId: string;
+  financedPrincipal: Cents;
+  installments: Installment[];
+}
+
+export interface FlowLine {
+  id: string;
+  kind: FlowKind;
+  category: string;
+  label: string;
+  amount: Cents;
+  amountMode: AmountMode;
+  recurrence: Recurrence;
+  recurrenceInterval: number;
+  startMonth: YearMonth;
+  endMonth?: YearMonth | null;
+  indexationRatePpm: Ppm;
+  indexationMonth?: number | null;
+  capitalize: boolean;
+  amortizationYears?: number | null;
+}
+
+export interface Lease {
+  id: string;
+  startMonth: YearMonth;
+  endMonth?: YearMonth | null;
+  monthlyRent: Cents;
+  indexationRatePpm: Ppm;
+}
+
+export interface PropertyAssumptions {
+  purchasePrice?: Cents | null;
+  currentValue?: Cents | null;
+  valueGrowthRatePpm: Ppm;
+  estimatedTaxYearly: Cents;
+  taxMode: TaxMode;
+  taxMonth?: number | null;
+}
+
+export interface ProjectionInput {
+  startMonth: YearMonth;
+  horizonMonths: number;
+  property: PropertyAssumptions;
+  loans: Loan[];
+  lines: FlowLine[];
+  leases: Lease[];
+  sharePermille?: number;
+}
+
+export interface MonthlyProjection {
+  month: YearMonth;
+  rent: Cents;
+  otherIncome: Cents;
+  income: Cents;
+  expenses: Cents;
+  loanPayment: Cents;
+  loanInsurance: Cents;
+  loanPenalty: Cents;
+  loanPrepayment: Cents;
+  interest: Cents;
+  principal: Cents;
+  tax: Cents;
+  net: Cents;
+  cumulative: Cents;
+  outstandingBalance: Cents;
+  propertyValue: Cents;
+  netWorth: Cents;
+  share: Cents;
+}
+
+export interface Indicators {
+  firstYearMonthlyEffort: Cents;
+  averageMonthlyNet: Cents;
+  firstYearNet: Cents;
+  firstYearRent: Cents;
+  acquisitionCost: Cents;
+  cashInvested: Cents;
+  grossYieldPpm: Ppm | null;
+  netYieldPpm: Ppm | null;
+  netNetYieldPpm: Ppm | null;
+  cashOnCashPpm: Ppm | null;
+  breakEvenMonth: YearMonth | null;
+  worstCumulative: Cents;
+  totalInterest: Cents;
+  totalInsurance: Cents;
+  totalPenalties: Cents;
+  totalCreditCost: Cents;
+  finalOutstandingBalance: Cents;
+  finalNetWorth: Cents;
+}
+
+export interface ProjectionResult {
+  projection: MonthlyProjection[];
+  indicators: Indicators;
+}
