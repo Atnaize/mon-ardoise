@@ -5,7 +5,7 @@ particulier. Deux biens au départ : une maison mise en location, une maison
 occupée avec un projet d'extension. Un bien n'a donc pas forcément de revenu.
 
 - **Document de cadrage** (modèle de données, moteur de calcul, lots) :
-  https://claude.ai/code/artifact/4fa79eeb-f0ed-47b4-991a-9b1d794e75f8
+  [docs/CADRAGE.md](docs/CADRAGE.md)
 - **Backlog et points bloquants** : [TODO.md](TODO.md)
 
 ## État
