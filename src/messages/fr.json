@@ -1,0 +1,34 @@
+{
+  "app": {
+    "name": "Mon Ardoise",
+    "tagline": "Prévoir les coûts et les rentrées de vos biens en location"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signInWithGoogle": "Continuer avec Google",
+    "signOut": "Se déconnecter",
+    "signedInAs": "Connecté en tant que {name}",
+    "loginTitle": "Connexion",
+    "loginIntro": "Un compte Google suffit. Aucun mot de passe à retenir."
+  },
+  "home": {
+    "emptyTitle": "Aucun bien encodé",
+    "emptyBody": "Les écrans de saisie arrivent au lot 2. Les fondations sont en place : connexion, base de données, deux langues, application installable.",
+    "guestTitle": "Planifiez avant de signer",
+    "guestBody": "Prêt, frais initiaux, frais récurrents, loyers : une projection mois par mois sur vingt ans, et le seul chiffre qui compte vraiment — ce que ça sort de votre poche chaque mois.",
+    "foundationsTitle": "Lot 0 · Fondations livrées",
+    "foundations": {
+      "auth": "Connexion Google",
+      "db": "Base Postgres et schéma complet",
+      "i18n": "Français et anglais",
+      "pwa": "Installable sur téléphone",
+      "engine": "Socle du moteur de calcul",
+      "ci": "Intégration continue bloquante"
+    }
+  },
+  "locale": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "English"
+  }
+}

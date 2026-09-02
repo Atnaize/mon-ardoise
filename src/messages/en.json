@@ -1,0 +1,34 @@
+{
+  "app": {
+    "name": "Mon Ardoise",
+    "tagline": "Forecast the costs and income of your rental properties"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signInWithGoogle": "Continue with Google",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {name}",
+    "loginTitle": "Sign in",
+    "loginIntro": "A Google account is all you need. No password to remember."
+  },
+  "home": {
+    "emptyTitle": "No property yet",
+    "emptyBody": "Data entry screens land in stage 2. The foundations are in place: sign-in, database, two languages, installable app.",
+    "guestTitle": "Plan before you sign",
+    "guestBody": "Loan, upfront costs, recurring costs, rent: a month-by-month projection over twenty years, and the only number that really matters — what it takes out of your pocket every month.",
+    "foundationsTitle": "Stage 0 · Foundations shipped",
+    "foundations": {
+      "auth": "Google sign-in",
+      "db": "Postgres database and full schema",
+      "i18n": "French and English",
+      "pwa": "Installable on mobile",
+      "engine": "Calculation engine groundwork",
+      "ci": "Blocking continuous integration"
+    }
+  },
+  "locale": {
+    "label": "Language",
+    "fr": "Français",
+    "en": "English"
+  }
+}
