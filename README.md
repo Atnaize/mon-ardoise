@@ -22,16 +22,21 @@ projection et les indicateurs.
 
 ```bash
 npm install
-cp .env.example .env.local   # puis remplir les quatre valeurs
+cp .env.example .env.local   # puis remplir les valeurs
+npm run db:up                # Postgres local dans docker, port 5433
 npm run db:migrate
 npm run dev
 ```
+
+La base tourne en local par défaut. Pour travailler contre Neon, commente la
+ligne `DATABASE_URL` locale de `.env.local` et décommente celle de Neon — c'est
+le même driver des deux côtés, il n'y a rien d'autre à changer.
 
 ### Les quatre valeurs à remplir
 
 | Variable | Où la trouver |
 | --- | --- |
-| `DATABASE_URL` | [console.neon.tech](https://console.neon.tech) → projet → connection string *pooled* |
+| `DATABASE_URL` | déjà remplie pour le Postgres local ; pour Neon, [console.neon.tech](https://console.neon.tech) → projet → connection string *pooled*, avec `sslmode=verify-full` |
 | `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
 | `GOOGLE_CLIENT_ID` / `_SECRET` | Google Cloud Console → Credentials → OAuth client ID (Web) |
 
@@ -48,6 +53,8 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 | `npm test` | Tests du moteur de calcul (Vitest) |
 | `npm run check:auth-schema` | Vérifie que le schéma Drizzle satisfait better-auth |
 | `npm run build` | Build de production |
+| `npm run db:up` | Démarre le Postgres local (docker compose) |
+| `npm run db:down` | Arrête le Postgres local, sans perdre les données |
 | `npm run db:generate` | Génère une migration SQL depuis le schéma |
 | `npm run db:migrate` | Applique les migrations |
 | `npm run db:studio` | Explorateur Drizzle |
@@ -73,8 +80,8 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 ## Stack
 
 Next.js 16 (App Router, Turbopack) · TypeScript strict · Tailwind CSS 4 ·
-Neon Postgres + Drizzle · better-auth (Google) · next-intl (fr/en) ·
-Vitest · GitHub Actions · Vercel
+Postgres (local en docker, Neon en production) + Drizzle · better-auth (Google) ·
+next-intl (fr/en) · Vitest · GitHub Actions · Vercel
 
 Deux écarts assumés par rapport au cadrage initial, décidés après vérification :
 
@@ -96,6 +103,15 @@ Deux écarts assumés par rapport au cadrage initial, décidés après vérifica
   L'advisory concerne le serveur de développement d'esbuild, que drizzle-kit
   n'expose pas ; l'outil ne tourne qu'en local et en CI, jamais en production.
   Corriger imposerait de régresser en drizzle-kit 0.18.
+- **Un seul driver Postgres, `pg`, en local comme en production.** Le driver
+  `@neondatabase/serverless` a été abandonné : il ne parle qu'à Neon en HTTP,
+  donc impossible de développer contre un Postgres local, et ses transactions
+  n'ont pas la même sémantique que les transactions interactives. Le coût du
+  changement est environ 200 ms de handshake TCP au démarrage à froid sur
+  Vercel — négligeable ici, contre une divergence dev/prod supprimée.
+- Le Postgres local est en 16 et Neon en 18.6. Le schéma n'utilise rien de
+  spécifique à une version ; si une divergence apparaît un jour, changer le tag
+  dans `docker-compose.yml` suffit.
 - **Le schéma des tables d'auth est dicté par better-auth, pas par nous.** Il est
   écrit à la main dans `src/db/schema/auth.ts`, et `npm run check:auth-schema`
   interroge `getAuthTables()` pour vérifier qu'aucun champ attendu ne manque et
