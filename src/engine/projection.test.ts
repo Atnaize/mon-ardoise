@@ -30,7 +30,6 @@ function yearlyExpense(id: string, euros: number): FlowLine {
   return {
     id,
     kind: "expense",
-    category: id,
     label: id,
     amount: eurosToCents(euros),
     amountMode: "fixed",
@@ -42,6 +41,7 @@ function yearlyExpense(id: string, euros: number): FlowLine {
     indexationMonth: null,
     capitalize: false,
     amortizationYears: null,
+    isAcquisitionCost: false,
   };
 }
 
@@ -222,6 +222,80 @@ describe("computeIndicators · fenêtres de calcul", () => {
     const { indicators } = runProjection(late);
 
     expect(indicators.referenceMonth).toBe(ACQUIRED);
+  });
+});
+
+describe("computeIndicators · coûts d'acquisition", () => {
+  function oneOff(id: string, euros: number, monthOffset: number, isAcquisitionCost: boolean): FlowLine {
+    return {
+      id,
+      kind: "expense",
+      label: id,
+      amount: eurosToCents(euros),
+      amountMode: "fixed",
+      recurrence: "one_off",
+      recurrenceInterval: 1,
+      startMonth: START + monthOffset,
+      endMonth: null,
+      indexationRatePpm: 0,
+      indexationMonth: null,
+      capitalize: false,
+      amortizationYears: null,
+      isAcquisitionCost,
+    };
+  }
+
+  const recurring = [
+    yearlyExpense("precompte_immobilier", 900),
+    yearlyExpense("assurance", 340),
+    yearlyExpense("entretien", 300),
+  ];
+
+  const base = runProjection(input({ lines: recurring })).indicators;
+
+  it("ajoute un frais marqué acquisition au dénominateur", () => {
+    const { indicators } = runProjection(
+      input({ lines: [...recurring, oneOff("notaire", 25_000, 0, true)] }),
+    );
+
+    expect(base.acquisitionCost).toBe(eurosToCents(250_000));
+    expect(indicators.acquisitionCost).toBe(eurosToCents(275_000));
+    expect(indicators.grossYieldPpm!).toBeLessThan(base.grossYieldPpm!);
+  });
+
+  it("compte ce frais quelle que soit sa date, sans falaise à douze mois", () => {
+    const atStart = runProjection(input({ lines: [...recurring, oneOff("notaire", 25_000, 0, true)] }));
+    const muchLater = runProjection(input({ lines: [...recurring, oneOff("notaire", 25_000, 60, true)] }));
+
+    expect(muchLater.indicators.acquisitionCost).toBe(atStart.indicators.acquisitionCost);
+  });
+
+  it("ne le compte pas comme charge de l'année, donc ne détruit pas le rendement net", () => {
+    const { indicators } = runProjection(
+      input({ lines: [...recurring, oneOff("notaire", 25_000, 0, true)] }),
+    );
+
+    expect(indicators.netYieldPpm!).toBeGreaterThan(0);
+    expect(indicators.netYieldPpm!).toBeLessThan(indicators.grossYieldPpm!);
+  });
+
+  it("laisse le coût d'acquisition intact pour un frais ponctuel non marqué", () => {
+    const { indicators } = runProjection(
+      input({ lines: [...recurring, oneOff("chaudiere", 4_000, 4, false)] }),
+    );
+
+    expect(indicators.acquisitionCost).toBe(base.acquisitionCost);
+    expect(indicators.netYieldPpm).toBe(base.netYieldPpm);
+  });
+
+  it("fait quand même sortir la trésorerie au mois indiqué", () => {
+    const { projection } = runProjection(
+      input({ lines: [...recurring, oneOff("notaire", 25_000, 3, true)] }),
+    );
+
+    expect(projection[3].expenses).toBe(eurosToCents(25_000));
+    expect(projection[3].recurringExpenses).toBe(0);
+    expect(projection[3].net).toBeLessThan(projection[2].net);
   });
 });
 

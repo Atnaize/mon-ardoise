@@ -86,7 +86,6 @@ describe("propertySchema", () => {
 describe("flowLineSchema · unité du montant", () => {
   const base = {
     kind: "expense",
-    category: "precompte_immobilier",
     label: "Précompte immobilier",
     amount: "900",
     amountMode: "fixed",
@@ -114,6 +113,14 @@ describe("flowLineSchema · unité du montant", () => {
 
   it("lit la case étalement cochée", () => {
     expect(flowLineSchema.parse({ ...base, capitalize: "on" }).capitalize).toBe(true);
+  });
+
+  it("traite un coût d'acquisition non coché comme faux", () => {
+    expect(flowLineSchema.parse(base).isAcquisitionCost).toBe(false);
+  });
+
+  it("lit un coût d'acquisition coché", () => {
+    expect(flowLineSchema.parse({ ...base, isAcquisitionCost: "on" }).isAcquisitionCost).toBe(true);
   });
 
   it("laisse amortizationYears à null sans étalement", () => {

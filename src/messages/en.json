@@ -107,7 +107,6 @@
     "flowKind": "Nature",
     "flowExpense": "Cost",
     "flowIncome": "Income",
-    "category": "Category",
     "label": "Label",
     "amount": "Amount",
     "amountMode": "Amount mode",
@@ -123,7 +122,10 @@
     "capitalize": "Spread this amount over several years",
     "amortizationYears": "Spread over",
     "currentValueHint": "What the property is worth today, not what you paid",
-    "valueGrowthRateHint": "Leave at 0 to assume no appreciation. This is an assumption, not a fact."
+    "valueGrowthRateHint": "Leave at 0 to assume no appreciation. This is an assumption, not a fact.",
+    "isAcquisitionCost": "Counts towards the acquisition cost",
+    "isAcquisitionCostHint": "Notary, registration duties, arrangement fees, agency, works to make it rentable. These form the denominator of the yields; they are not counted as a charge for the year.",
+    "oneOffNote": "A one-off cost leaves your cash in the month given, but never enters a yield calculation — a yield is measured over a stabilised year."
   },
   "summary": {
     "effort": "Monthly savings effort",

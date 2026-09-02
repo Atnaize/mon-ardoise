@@ -70,7 +70,6 @@ export interface Schedule {
 export interface FlowLine {
   id: string;
   kind: FlowKind;
-  category: string;
   label: string;
   amount: Cents;
   amountMode: AmountMode;
@@ -82,6 +81,8 @@ export interface FlowLine {
   indexationMonth?: number | null;
   capitalize: boolean;
   amortizationYears?: number | null;
+  /** Entre dans le coût d'acquisition, dénominateur des rendements, au lieu d'être une charge d'exploitation. */
+  isAcquisitionCost: boolean;
 }
 
 export interface Lease {
@@ -117,6 +118,8 @@ export interface MonthlyProjection {
   otherIncome: Cents;
   income: Cents;
   expenses: Cents;
+  /** Part des charges qui se répète : ce qui fait un rendement, par opposition aux frais ponctuels. */
+  recurringExpenses: Cents;
   loanPayment: Cents;
   loanInsurance: Cents;
   loanPenalty: Cents;

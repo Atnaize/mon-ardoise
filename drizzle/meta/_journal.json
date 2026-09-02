@@ -43,6 +43,20 @@
       "when": 1788361546938,
       "tag": "0005_drop_marginal_tax_rate",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788362119757,
+      "tag": "0006_drop_flow_line_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788362353022,
+      "tag": "0007_flow_line_acquisition_cost",
+      "breakpoints": true
     }
   ]
 }

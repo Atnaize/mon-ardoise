@@ -31,14 +31,11 @@ function indexOfMonth(projection: readonly MonthlyProjection[], month: number): 
   return index === -1 ? 0 : index;
 }
 
-function upfrontCosts(input: ProjectionInput, until: number): Cents {
+function acquisitionCosts(input: ProjectionInput): Cents {
   return input.lines
     .filter(
       (line) =>
-        line.kind === "expense" &&
-        line.recurrence === "one_off" &&
-        line.amountMode === "fixed" &&
-        line.startMonth <= until,
+        line.kind === "expense" && line.isAcquisitionCost && line.amountMode === "fixed",
     )
     .reduce((total, line) => total + line.amount, 0);
 }
@@ -56,12 +53,19 @@ export function computeIndicators(
   const rented = firstRentIndex === -1 ? [] : windowFrom(projection, firstRentIndex);
 
   const annualRent = sum(rented.map((month) => month.rent));
-  const rentedExpenses = sum(rented.map((month) => month.expenses));
+  const rentedExpenses = sum(rented.map((month) => month.recurringExpenses));
   const rentedTax = sum(rented.map((month) => month.tax));
-  const rentedNet = sum(rented.map((month) => month.net));
 
-  const acquisitionCost =
-    (input.property.purchasePrice ?? 0) + upfrontCosts(input, input.startMonth + WINDOW - 1);
+  // Un rendement se mesure sur une année stabilisée : les frais ponctuels et les
+  // remboursements anticipés sont de la trésorerie, pas des charges d'exploitation.
+  const rentedNet = sum(
+    rented.map(
+      (month) =>
+        month.net + (month.expenses - month.recurringExpenses) + month.loanPrepayment + month.loanPenalty,
+    ),
+  );
+
+  const acquisitionCost = (input.property.purchasePrice ?? 0) + acquisitionCosts(input);
   const financed = input.loans.reduce(
     (total, loan) => total + buildSchedule(loan).financedPrincipal,
     0,

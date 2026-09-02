@@ -13,7 +13,6 @@ function line(overrides: Partial<FlowLine> = {}): FlowLine {
   return {
     id: "line-1",
     kind: "expense",
-    category: "autre",
     label: "Ligne",
     amount: eurosToCents(100),
     amountMode: "fixed",
@@ -25,6 +24,7 @@ function line(overrides: Partial<FlowLine> = {}): FlowLine {
     indexationMonth: null,
     capitalize: false,
     amortizationYears: null,
+    isAcquisitionCost: false,
     ...overrides,
   };
 }

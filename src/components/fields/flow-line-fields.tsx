@@ -10,7 +10,6 @@ import { errorFor, prefixed, type FieldErrors } from "./prefix";
 
 export interface FlowLineDefaults {
   kind?: string;
-  category?: string | null;
   label?: string | null;
   amount?: number | null;
   amountMode?: string;
@@ -20,6 +19,7 @@ export interface FlowLineDefaults {
   endDate?: string | null;
   indexationRatePpm?: number;
   capitalize?: boolean;
+  isAcquisitionCost?: boolean;
   amortizationYears?: number | null;
 }
 
@@ -39,6 +39,8 @@ export function FlowLineFields({
   const error = (field: string) => errorFor(errors, prefix, field);
 
   const [capitalize, setCapitalize] = useState(defaults.capitalize ?? false);
+  const [acquisition, setAcquisition] = useState(defaults.isAcquisitionCost ?? false);
+  const [recurrence, setRecurrence] = useState(defaults.recurrence ?? "yearly");
   const [amountMode, setAmountMode] = useState(defaults.amountMode ?? "fixed");
 
   return (
@@ -48,15 +50,6 @@ export function FlowLineFields({
           <option value="expense">{t("fields.flowExpense")}</option>
           <option value="income">{t("fields.flowIncome")}</option>
         </Select>
-      </Field>
-
-      <Field label={t("fields.category")} name={name("category")} error={error("category")}>
-        <Input
-          name={name("category")}
-          placeholder="precompte_immobilier"
-          defaultValue={textField(defaults.category)}
-          required
-        />
       </Field>
 
       <Field label={t("fields.label")} name={name("label")} error={error("label")}>
@@ -98,7 +91,11 @@ export function FlowLineFields({
       </Field>
 
       <Field label={t("fields.recurrence")} name={name("recurrence")}>
-        <Select name={name("recurrence")} defaultValue={defaults.recurrence ?? "yearly"}>
+        <Select
+          name={name("recurrence")}
+          value={recurrence}
+          onChange={(event) => setRecurrence(event.target.value)}
+        >
           <option value="one_off">{t("fields.recurrenceOneOff")}</option>
           <option value="monthly">{t("fields.recurrenceMonthly")}</option>
           <option value="quarterly">{t("fields.recurrenceQuarterly")}</option>
@@ -162,6 +159,20 @@ export function FlowLineFields({
       ) : (
         <input type="hidden" name={name("amortizationYears")} value="" />
       )}
+
+      {recurrence === "one_off" ? (
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          <Checkbox
+            name={name("isAcquisitionCost")}
+            label={t("fields.isAcquisitionCost")}
+            checked={acquisition}
+            onChange={(event) => setAcquisition(event.target.checked)}
+          />
+          <p className="text-xs text-ink-3">
+            {acquisition ? t("fields.isAcquisitionCostHint") : t("fields.oneOffNote")}
+          </p>
+        </div>
+      ) : null}
     </>
   );
 }

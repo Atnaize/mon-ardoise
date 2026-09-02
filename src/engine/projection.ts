@@ -95,8 +95,10 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
   const rents = rentByMonth(input.leases, startMonth, horizonMonths);
   const rentAt = (month: YearMonth) => rents[month - startMonth] ?? 0;
 
-  const expenses = totalsByMonth(
-    input.lines.filter((line) => line.kind === "expense"),
+  const expenseLines = input.lines.filter((line) => line.kind === "expense");
+  const expenses = totalsByMonth(expenseLines, startMonth, horizonMonths, rentAt);
+  const recurringExpenses = totalsByMonth(
+    expenseLines.filter((line) => line.recurrence !== "one_off"),
     startMonth,
     horizonMonths,
     rentAt,
@@ -138,6 +140,7 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
       otherIncome: otherIncome[offset],
       income,
       expenses: expenses[offset],
+      recurringExpenses: recurringExpenses[offset],
       loanPayment: loans.payment[offset],
       loanInsurance: loans.insurance[offset],
       loanPenalty: loans.penalty[offset],

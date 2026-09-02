@@ -1,0 +1,1 @@
+ALTER TABLE "flow_line" DROP COLUMN "category";

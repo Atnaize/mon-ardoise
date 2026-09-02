@@ -107,7 +107,6 @@
     "flowKind": "Nature",
     "flowExpense": "Frais",
     "flowIncome": "Revenu",
-    "category": "Catégorie",
     "label": "Libellé",
     "amount": "Montant",
     "amountMode": "Mode de montant",
@@ -123,7 +122,10 @@
     "capitalize": "Étaler ce montant sur plusieurs années",
     "amortizationYears": "Étalé sur",
     "currentValueHint": "Ce que le bien vaut aujourd'hui, pas son prix d'achat",
-    "valueGrowthRateHint": "Laisse à 0 pour ne supposer aucune plus-value. C'est une hypothèse, pas une donnée."
+    "valueGrowthRateHint": "Laisse à 0 pour ne supposer aucune plus-value. C'est une hypothèse, pas une donnée.",
+    "isAcquisitionCost": "Compte dans le coût d'acquisition",
+    "isAcquisitionCostHint": "Notaire, droits d'enregistrement, frais de dossier, agence, travaux de mise en location. Ces frais forment le dénominateur des rendements ; ils ne sont pas comptés comme charge de l'année.",
+    "oneOffNote": "Un frais ponctuel sort de la trésorerie au mois indiqué, mais n'entre jamais dans le calcul d'un rendement — un rendement se mesure sur une année stabilisée."
   },
   "summary": {
     "effort": "Effort d'épargne mensuel",

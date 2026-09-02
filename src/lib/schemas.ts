@@ -93,7 +93,6 @@ export const leaseSchema = z.object({
 
 const flowLineFields = z.object({
   kind: z.enum(["expense", "income"]),
-  category: z.string().trim().min(1).max(60),
   label: z.string().trim().min(1, "Donne un libellé").max(120),
   amount: decimalField("Montant invalide"),
   amountMode: z.enum(["fixed", "percent_of_rent"]),
@@ -106,6 +105,7 @@ const flowLineFields = z.object({
   amortizationYears: z
     .union([z.coerce.number().int().min(1).max(50), z.literal("")])
     .transform((value) => (value === "" ? null : value)),
+  isAcquisitionCost: checkbox,
 });
 
 export const flowLineSchema = flowLineFields.transform((data) => ({

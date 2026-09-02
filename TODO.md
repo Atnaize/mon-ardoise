@@ -24,6 +24,13 @@ abandonné avec Eric.
   était saisi et stocké sans qu'aucun calcul ne le lise : ni le moteur, ni un
   calculateur assisté. Il revient avec son premier consommateur réel, le
   rendement net-net.
+- La **catégorie d'une ligne de frais ou de revenus** est retirée du schéma et du
+  formulaire. Texte libre obligatoire, elle était saisie, stockée et transportée
+  jusqu'au moteur sans que rien ne la lise : ni agrégation, ni filtre, ni
+  affichage. Elle revient avec son premier consommateur réel — la répartition par
+  poste dans la synthèse, ou le calcul fiscal — et ce sera alors une liste fermée,
+  pas un champ libre. `actual_entry.category` reste : elle sert à repérer les
+  loyers, et c'est le code qui l'écrit.
 - Le **précompte immobilier** est une simple ligne de frais récurrente, ajustée à la
   main après réception de l'avertissement-extrait de rôle. Pas de champ dédié
   « PI avant / après mise en location » : ça n'aurait servi qu'une fois.

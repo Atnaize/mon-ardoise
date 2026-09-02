@@ -343,7 +343,6 @@ export async function saveFlowLineAction(
   const input = parsed.data;
   const values = {
     kind: input.kind,
-    category: input.category,
     label: input.label,
     amount: input.amount,
     amountMode: input.amountMode,
@@ -354,6 +353,7 @@ export async function saveFlowLineAction(
     indexationRatePpm: input.indexationRate,
     capitalize: input.capitalize,
     amortizationYears: input.amortizationYears,
+    isAcquisitionCost: input.isAcquisitionCost,
   };
 
   if (lineId) {

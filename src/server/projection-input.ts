@@ -91,7 +91,6 @@ function toFlowLine(row: FlowLineRow): FlowLine {
   return {
     id: row.id,
     kind: row.kind,
-    category: row.category,
     label: row.label,
     amount: row.amount,
     amountMode: row.amountMode,
@@ -103,6 +102,7 @@ function toFlowLine(row: FlowLineRow): FlowLine {
     indexationMonth: row.indexationMonth,
     capitalize: row.capitalize,
     amortizationYears: row.amortizationYears,
+    isAcquisitionCost: row.isAcquisitionCost,
   };
 }
 
