@@ -46,7 +46,12 @@
       "preparing": "En préparation",
       "rented": "Loué",
       "occupied": "Occupé"
-    }
+    },
+    "edit": "Modifier le bien",
+    "editTitle": "Modifier {name}",
+    "dangerZone": "Supprimer ce bien",
+    "dangerHint": "Le bien, ses prêts, ses baux et ses lignes de frais sont supprimés définitivement.",
+    "delete": "Supprimer définitivement"
   },
   "fields": {
     "name": "Nom du bien",
@@ -115,7 +120,9 @@
     "recurrenceEveryNYears": "Tous les N ans",
     "recurrenceInterval": "Intervalle",
     "capitalize": "Étaler ce montant sur plusieurs années",
-    "amortizationYears": "Étalé sur"
+    "amortizationYears": "Étalé sur",
+    "currentValueHint": "Ce que le bien vaut aujourd'hui, pas son prix d'achat",
+    "valueGrowthRateHint": "Laisse à 0 pour ne supposer aucune plus-value. C'est une hypothèse, pas une donnée."
   },
   "summary": {
     "effort": "Effort d'épargne mensuel",
@@ -152,7 +159,16 @@
     "loans": "Prêts",
     "leases": "Baux",
     "delete": "Supprimer",
-    "yieldHint": "Sur les 12 premiers mois loués, à partir de {month}"
+    "yieldHint": "Sur les 12 premiers mois loués, à partir de {month}",
+    "edit": "Modifier",
+    "addLoan": "Ajouter un prêt",
+    "addLease": "Ajouter un bail",
+    "loansEmpty": "Aucun prêt. Le bien est financé sur fonds propres.",
+    "leasesEmpty": "Aucun bail. Aucun loyer n'entre dans la projection.",
+    "propertyValue": "Valeur estimée en fin d'horizon",
+    "propertyValueFlat": "Aucune croissance supposée — la valeur reste celle que tu as saisie",
+    "propertyValueGrown": "Croissance supposée de {rate} par an, appliquée sur {years} ans",
+    "netWorthHint": "Valeur estimée {value} moins capital restant dû {debt}, en {month}"
   },
   "common": {
     "cancel": "Annuler",

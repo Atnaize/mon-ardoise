@@ -50,12 +50,15 @@ abandonné avec Eric.
 
 ## Dette assumée du lot 2
 
-- [ ] **Édition après création** — un bien, un prêt ou un bail ne peuvent
-      aujourd'hui qu'être créés. Seules les lignes de frais s'ajoutent et se
-      suppriment. À faire avant d'encoder les biens réels pour de bon.
+- [x] ~~**Édition après création**~~ — bien, prêts, baux et lignes se créent, se
+      modifient et se suppriment. Formulaires partagés entre création et édition.
+- [x] ~~**Suppression d'un bien**~~ — zone dangereuse sur l'écran de modification.
 - [ ] **UI des assurances et des remboursements anticipés** — le schéma et le
       moteur les portent entièrement, il manque les formulaires.
-- [ ] **Suppression d'un bien** — pas d'écran, à faire en base pour l'instant.
+- [ ] **Confirmation avant suppression** — un clic suffit aujourd'hui à supprimer
+      un bien et tout ce qu'il contient. Ajouter une confirmation.
+- [ ] **Périodes de taux multiples dans l'UI** — le formulaire de prêt ne gère que
+      la période initiale ; le moteur en accepte autant qu'on veut.
 
 ## Backlog
 

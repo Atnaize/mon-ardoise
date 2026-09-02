@@ -25,9 +25,13 @@ projection mensuelle, dix-huit indicateurs, comparaison de scénarios.
 avec son prêt et son bail, ajout et suppression des lignes de frais et de revenus,
 écran de synthèse avec les douze indicateurs, timeline mensuelle et vue annuelle.
 
-**Ce qui n'y est pas encore** — modifier un bien, un prêt ou un bail après
-création, l'UI des assurances et des remboursements anticipés (le schéma et le
-moteur les portent déjà), les graphiques du lot 3, les scénarios du lot 4.
+Bien, prêts, baux et lignes se créent, se modifient et se suppriment. Les
+formulaires de création et d'édition partagent les mêmes composants de champs :
+un champ ajouté dans `src/components/fields/` apparaît des deux côtés.
+
+**Ce qui n'y est pas encore** — l'UI des assurances et des remboursements
+anticipés (le schéma et le moteur les portent déjà), la confirmation avant
+suppression, les graphiques du lot 3, les scénarios du lot 4.
 
 ## Démarrer
 
@@ -82,7 +86,11 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
    base ni dans le moteur. Les taux sont des entiers en ppm (`3,5 % → 35 000`).
 5. **Toute requête est filtrée par appartenance** via `property_member`, dès la
    première ligne de code d'accès aux données.
-6. **La conversion du taux annuel en taux mensuel est un paramètre du contrat,
+6. **Aucune hypothèse financière n'est supposée par défaut.** La croissance de la
+   valeur du bien démarre à 0 %. Supposer une plus-value flatte silencieusement
+   toutes les projections ; c'est à l'utilisateur de la choisir, et l'écran
+   rappelle l'hypothèse retenue sous le chiffre qu'elle produit.
+7. **La conversion du taux annuel en taux mensuel est un paramètre du contrat,
    pas une règle universelle.** Deux conventions existent : l'équivalence
    `(1 + i)^(1/12) − 1` et le douzième `i / 12`. L'écart n'est pas cosmétique —
    sur 200 000 € à 3,5 % sur 20 ans il vaut 1 353,60 € de coût total — donc le
@@ -120,6 +128,8 @@ Tout ce qui touche à l'apparence est concentré pour pouvoir être jeté :
 | --- | --- |
 | `src/app/globals.css` | **tous** les tokens — couleurs des deux thèmes, rayon d'angle, familles de police. Aucun hex ailleurs dans le code |
 | `src/components/ui/` | les primitives : `Button` `Card` `Field` `Input` `Select` `Checkbox` `Stat` `Table` `Badge` |
+| `src/components/fields/` | les groupes de champs, partagés entre création et édition |
+| `src/components/forms/` | les formulaires, qui n'assemblent que des champs et `InlineForm` |
 | `src/components/` | les composants métier, qui ne font que composer les primitives |
 | `src/lib/format.ts` | montants, pourcentages et mois, localisés |
 

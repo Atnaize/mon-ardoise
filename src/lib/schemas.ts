@@ -19,7 +19,7 @@ function parseDecimal(raw: string | number): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-function decimalField(message: string) {
+export function decimalField(message: string) {
   return z.union([z.string(), z.number()]).transform((raw, ctx) => {
     const value = parseDecimal(raw);
 
@@ -87,11 +87,11 @@ export const leaseSchema = z.object({
   status: z.enum(["planned", "active", "ended"]),
 });
 
-export const flowLineSchema = z.object({
+const flowLineFields = z.object({
   kind: z.enum(["expense", "income"]),
   category: z.string().trim().min(1).max(60),
   label: z.string().trim().min(1, "Donne un libellé").max(120),
-  amount: euros,
+  amount: decimalField("Montant invalide"),
   amountMode: z.enum(["fixed", "percent_of_rent"]),
   recurrence: z.enum(["one_off", "monthly", "quarterly", "yearly", "every_n_years"]),
   recurrenceInterval: z.coerce.number().int().min(1).max(50),
@@ -103,6 +103,14 @@ export const flowLineSchema = z.object({
     .union([z.coerce.number().int().min(1).max(50), z.literal("")])
     .transform((value) => (value === "" ? null : value)),
 });
+
+export const flowLineSchema = flowLineFields.transform((data) => ({
+  ...data,
+  amount:
+    data.amountMode === "percent_of_rent"
+      ? percentToPpm(data.amount)
+      : eurosToCents(data.amount),
+}));
 
 export const wizardSchema = z.object({
   property: propertySchema,

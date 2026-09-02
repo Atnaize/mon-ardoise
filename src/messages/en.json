@@ -46,7 +46,12 @@
       "preparing": "Getting ready",
       "rented": "Rented",
       "occupied": "Occupied"
-    }
+    },
+    "edit": "Edit property",
+    "editTitle": "Edit {name}",
+    "dangerZone": "Delete this property",
+    "dangerHint": "The property, its loans, leases and cost lines are permanently deleted.",
+    "delete": "Delete permanently"
   },
   "fields": {
     "name": "Property name",
@@ -115,7 +120,9 @@
     "recurrenceEveryNYears": "Every N years",
     "recurrenceInterval": "Interval",
     "capitalize": "Spread this amount over several years",
-    "amortizationYears": "Spread over"
+    "amortizationYears": "Spread over",
+    "currentValueHint": "What the property is worth today, not what you paid",
+    "valueGrowthRateHint": "Leave at 0 to assume no appreciation. This is an assumption, not a fact."
   },
   "summary": {
     "effort": "Monthly savings effort",
@@ -152,7 +159,16 @@
     "loans": "Loans",
     "leases": "Leases",
     "delete": "Delete",
-    "yieldHint": "Over the first 12 rented months, from {month}"
+    "yieldHint": "Over the first 12 rented months, from {month}",
+    "edit": "Edit",
+    "addLoan": "Add a loan",
+    "addLease": "Add a lease",
+    "loansEmpty": "No loan. The property is financed with your own funds.",
+    "leasesEmpty": "No lease. No rent enters the projection.",
+    "propertyValue": "Estimated value at end of horizon",
+    "propertyValueFlat": "No growth assumed — the value stays the one you entered",
+    "propertyValueGrown": "Assumed growth of {rate} per year, applied over {years} years",
+    "netWorthHint": "Estimated value {value} minus outstanding balance {debt}, in {month}"
   },
   "common": {
     "cancel": "Cancel",
