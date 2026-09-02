@@ -13,6 +13,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Stat, StatGrid } from "@/components/ui/stat";
 import { Link } from "@/i18n/navigation";
 import { money, monthLabel, percent } from "@/lib/format";
+import { todayIso } from "@/lib/clock";
 import { currentUser } from "@/lib/session";
 import {
   deleteFlowLineAction,
@@ -31,10 +32,6 @@ const RECURRENCE_KEY = {
   every_n_years: "EveryNYears",
 } as const;
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export default async function PropertyPage({ params }: PageProps<"/[locale]/properties/[id]">) {
   const { locale, id } = await params;
   const t = await getTranslations();
@@ -50,17 +47,20 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
     notFound();
   }
 
-  const { bundle, projection, indicators } = loaded;
+  const { bundle, projection, indicators, ledger } = loaded;
   const last = projection.at(-1)!;
   const growthPpm = bundle.property.valueGrowthRatePpm;
-  const now = today();
+  const now = todayIso();
 
   return (
     <AppShell>
       <PageTitle
         title={bundle.property.name}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`/properties/${id}/rent`}>
+              <Button size="sm">{t("rent.link")}</Button>
+            </Link>
             <Link href={`/properties/${id}/edit`}>
               <Button variant="secondary" size="sm">
                 {t("property.edit")}
@@ -153,6 +153,16 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           value={money(indicators.finalNetWorth, locale)}
         />
       </StatGrid>
+
+      {ledger.outstanding > 0 ? (
+        <Link
+          href={`/properties/${id}/rent`}
+          className="rounded-ui border-l-2 border-negative bg-surface px-4 py-3 text-sm text-negative transition-colors hover:bg-surface-2"
+        >
+          {t("rent.overdue", { count: ledger.overdueMonths.length })} ·{" "}
+          {money(ledger.outstanding, locale)}
+        </Link>
+      ) : null}
 
       {indicators.rentStartMonth == null ? (
         <p className="rounded-ui border-l-2 border-warning bg-surface px-4 py-3 text-sm text-ink-2">

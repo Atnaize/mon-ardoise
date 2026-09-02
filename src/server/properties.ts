@@ -14,8 +14,9 @@ import {
   propertyMember,
 } from "@/db/schema";
 import { runProjection } from "@/engine";
-import { fromIsoDate } from "@/engine/month";
+import type { RentLedger } from "@/engine/rent-ledger";
 import type { Indicators } from "@/engine/types";
+import { currentMonth } from "@/lib/clock";
 
 import {
   earliestMonth,
@@ -23,6 +24,7 @@ import {
   type LoanBundle,
   type PropertyBundle,
 } from "./projection-input";
+import { ledgerFor, rentPaymentsByProperty, rentPaymentsOf } from "./rent-entries";
 
 export class NotAuthorized extends Error {
   constructor() {
@@ -31,14 +33,6 @@ export class NotAuthorized extends Error {
 }
 
 const EDITOR_ROLES = ["owner", "editor"] as const;
-
-function currentMonth(): number {
-  const now = new Date();
-
-  return fromIsoDate(
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`,
-  );
-}
 
 export async function membershipOf(userId: string, propertyId: string) {
   const [row] = await db
@@ -142,6 +136,8 @@ export function projectBundle(bundle: PropertyBundle) {
 export interface PropertySummary {
   bundle: PropertyBundle;
   indicators: Indicators;
+  outstandingRent: number;
+  overdueCount: number;
 }
 
 export async function listProperties(userId: string): Promise<PropertySummary[]> {
@@ -152,10 +148,20 @@ export async function listProperties(userId: string): Promise<PropertySummary[]>
 
   const byProperty = new Map(members.map((member) => [member.propertyId, member]));
   const bundles = await loadBundles([...byProperty.keys()], byProperty);
+  const payments = await rentPaymentsByProperty([...bundles.keys()]);
 
   return [...bundles.values()]
     .sort((a, b) => a.property.name.localeCompare(b.property.name))
-    .map((bundle) => ({ bundle, indicators: projectBundle(bundle).indicators }));
+    .map((bundle) => {
+      const ledger = ledgerFor(bundle, payments.get(bundle.property.id) ?? []);
+
+      return {
+        bundle,
+        indicators: projectBundle(bundle).indicators,
+        outstandingRent: ledger.outstanding,
+        overdueCount: ledger.overdueMonths.length,
+      };
+    });
 }
 
 export async function loadProjection(userId: string, propertyId: string) {
@@ -165,5 +171,25 @@ export async function loadProjection(userId: string, propertyId: string) {
     return null;
   }
 
-  return { bundle, ...projectBundle(bundle) };
+  const ledger = ledgerFor(bundle, await rentPaymentsOf(propertyId));
+
+  return { bundle, ledger, ...projectBundle(bundle) };
+}
+
+export interface RentLedgerView {
+  bundle: PropertyBundle;
+  ledger: RentLedger;
+}
+
+export async function loadRentLedger(
+  userId: string,
+  propertyId: string,
+): Promise<RentLedgerView | null> {
+  const bundle = await loadPropertyBundle(userId, propertyId);
+
+  if (!bundle) {
+    return null;
+  }
+
+  return { bundle, ledger: ledgerFor(bundle, await rentPaymentsOf(propertyId)) };
 }

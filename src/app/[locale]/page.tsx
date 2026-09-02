@@ -62,7 +62,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         </Card>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
-          {properties.map(({ bundle, indicators }) => (
+          {properties.map(({ bundle, indicators, outstandingRent, overdueCount }) => (
             <li key={bundle.property.id}>
               <Link
                 href={`/properties/${bundle.property.id}`}
@@ -88,9 +88,15 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                     </dd>
                   </div>
                   <div className="flex items-baseline justify-between gap-3">
-                    <dt className="text-xs text-ink-3">{t("summary.outstanding")}</dt>
-                    <dd className="text-sm tabular-nums text-ink-2">
-                      {money(indicators.finalOutstandingBalance, locale)}
+                    <dt className="text-xs text-ink-3">{t("rent.outstanding")}</dt>
+                    <dd
+                      className={`text-sm tabular-nums ${
+                        outstandingRent > 0 ? "font-medium text-negative" : "text-positive"
+                      }`}
+                    >
+                      {outstandingRent > 0
+                        ? `${money(outstandingRent, locale)} · ${t("rent.overdue", { count: overdueCount })}`
+                        : t("rent.clear")}
                     </dd>
                   </div>
                 </dl>

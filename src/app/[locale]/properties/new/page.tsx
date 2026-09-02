@@ -3,11 +3,8 @@ import { redirect } from "next/navigation";
 
 import { AppShell, PageTitle } from "@/components/app-shell";
 import { PropertyForm } from "@/components/property-form";
+import { todayIso } from "@/lib/clock";
 import { currentUser } from "@/lib/session";
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export default async function NewPropertyPage({ params }: PageProps<"/[locale]/properties/new">) {
   const { locale } = await params;
@@ -21,7 +18,7 @@ export default async function NewPropertyPage({ params }: PageProps<"/[locale]/p
   return (
     <AppShell>
       <PageTitle title={t("newTitle")} intro={t("newIntro")} />
-      <PropertyForm locale={locale} today={today()} />
+      <PropertyForm locale={locale} today={todayIso()} />
     </AppShell>
   );
 }

@@ -65,7 +65,6 @@
     "cadastralIncomeHint": "Non indexé, tel qu'il figure sur l'avertissement-extrait de rôle",
     "currentValue": "Valeur estimée aujourd'hui",
     "valueGrowthRate": "Croissance annuelle de la valeur",
-    "marginalTaxRate": "Taux marginal d'imposition",
     "estimatedTaxYearly": "Impôt estimé par an",
     "estimatedTaxYearlyHint": "En Wallonie, à un locataire particulier, l'impôt porte sur le revenu cadastral indexé majoré de 40 %, pas sur le loyer",
     "horizonYears": "Horizon de projection",
@@ -77,6 +76,8 @@
     "termMonths": "Durée",
     "months": "mois",
     "annualRate": "Taux annuel",
+    "loanConventions": "Conventions de calcul",
+    "loanConventionsHint": "Réglages avancés. Les valeurs par défaut sont celles des prêts hypothécaires belges — à ne changer que si le tableau d'amortissement de la banque dit autre chose.",
     "rateBasis": "Conversion en taux mensuel",
     "rateBasisHint": "À lire sur le tableau d'amortissement de la banque, jamais à supposer",
     "rateBasisNominal": "Douzième — taux annuel / 12",
@@ -174,5 +175,33 @@
     "cancel": "Annuler",
     "save": "Enregistrer",
     "back": "Retour aux biens"
+  },
+  "rent": {
+    "title": "L'ardoise",
+    "link": "L'ardoise",
+    "intro": "Ce que le locataire a versé, mois par mois, et ce qu'il reste dû.",
+    "outstanding": "Ardoise",
+    "outstandingHint": "Dû par le locataire sur les mois échus",
+    "expectedToDate": "Attendu à ce jour",
+    "receivedToDate": "Reçu à ce jour",
+    "overdue": "{count, plural, =0 {À jour} one {# mois en retard} other {# mois en retard}}",
+    "clear": "À jour",
+    "record": "Encoder un versement",
+    "expected": "Attendu",
+    "received": "Reçu",
+    "balance": "Solde",
+    "paymentAmount": "Montant reçu",
+    "paymentDate": "Date de réception",
+    "noLease": "Aucun bail encodé sur ce bien, donc aucun loyer attendu. Ajoute un bail depuis la synthèse.",
+    "nothingDue": "Le premier loyer attendu est postérieur à aujourd'hui. Rien à encoder pour l'instant.",
+    "status": {
+      "upcoming": "À venir",
+      "paid": "Payé",
+      "overpaid": "Trop-perçu",
+      "partial": "Partiel",
+      "overdue": "Impayé"
+    },
+    "editPayment": "Modifier ce versement",
+    "deletePayment": "Supprimer ce versement"
   }
 }

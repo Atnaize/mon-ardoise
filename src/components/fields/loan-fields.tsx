@@ -85,40 +85,85 @@ export function LoanFields({
           required
         />
       </Field>
+    </>
+  );
+}
 
-      <div className="sm:col-span-2">
-        <Field label={t("fields.rateBasis")} name={name("rateBasis")} hint={t("fields.rateBasisHint")}>
-          <Select name={name("rateBasis")} defaultValue={defaults.rateBasis ?? "nominal_12"}>
-            <option value="nominal_12">{t("fields.rateBasisNominal")}</option>
-            <option value="equivalent">{t("fields.rateBasisEquivalent")}</option>
+export function LoanAdvancedFields({
+  prefix,
+  errors,
+  defaults = {},
+}: {
+  prefix?: string;
+  errors: FieldErrors;
+  defaults?: LoanDefaults;
+}) {
+  const t = useTranslations();
+  const name = (field: string) => prefixed(prefix, field);
+  const error = (field: string) => errorFor(errors, prefix, field);
+
+  return (
+    <details className="rounded-ui border border-line-soft px-3 py-2.5 sm:col-span-2">
+      <summary className="cursor-pointer text-xs font-medium text-ink-2">
+        {t("fields.loanConventions")}
+      </summary>
+
+      <p className="mt-1.5 text-xs text-ink-3">{t("fields.loanConventionsHint")}</p>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Field
+            label={t("fields.rateBasis")}
+            name={name("rateBasis")}
+            hint={t("fields.rateBasisHint")}
+            error={error("rateBasis")}
+          >
+            <Select name={name("rateBasis")} defaultValue={defaults.rateBasis ?? "nominal_12"}>
+              <option value="nominal_12">{t("fields.rateBasisNominal")}</option>
+              <option value="equivalent">{t("fields.rateBasisEquivalent")}</option>
+            </Select>
+          </Field>
+        </div>
+
+        <div className="sm:col-span-2">
+          <Field
+            label={t("fields.amortization")}
+            name={name("amortization")}
+            error={error("amortization")}
+          >
+            <Select name={name("amortization")} defaultValue={defaults.amortization ?? "annuity"}>
+              <option value="annuity">{t("fields.amortizationAnnuity")}</option>
+              <option value="constant_principal">{t("fields.amortizationConstant")}</option>
+            </Select>
+          </Field>
+        </div>
+
+        <Field
+          label={t("fields.deferralType")}
+          name={name("deferralType")}
+          error={error("deferralType")}
+        >
+          <Select name={name("deferralType")} defaultValue={defaults.deferralType ?? "none"}>
+            <option value="none">{t("fields.deferralNone")}</option>
+            <option value="interest_only">{t("fields.deferralInterest")}</option>
+            <option value="full">{t("fields.deferralFull")}</option>
           </Select>
         </Field>
-      </div>
 
-      <Field label={t("fields.amortization")} name={name("amortization")}>
-        <Select name={name("amortization")} defaultValue={defaults.amortization ?? "annuity"}>
-          <option value="annuity">{t("fields.amortizationAnnuity")}</option>
-          <option value="constant_principal">{t("fields.amortizationConstant")}</option>
-        </Select>
-      </Field>
-
-      <Field label={t("fields.deferralType")} name={name("deferralType")}>
-        <Select name={name("deferralType")} defaultValue={defaults.deferralType ?? "none"}>
-          <option value="none">{t("fields.deferralNone")}</option>
-          <option value="interest_only">{t("fields.deferralInterest")}</option>
-          <option value="full">{t("fields.deferralFull")}</option>
-        </Select>
-      </Field>
-
-      <Field label={`${t("fields.deferralMonths")} · ${t("fields.months")}`} name={name("deferralMonths")}>
-        <Input
+        <Field
+          label={`${t("fields.deferralMonths")} · ${t("fields.months")}`}
           name={name("deferralMonths")}
-          type="number"
-          min={0}
-          max={120}
-          defaultValue={defaults.deferralMonths ?? 0}
-        />
-      </Field>
-    </>
+          error={error("deferralMonths")}
+        >
+          <Input
+            name={name("deferralMonths")}
+            type="number"
+            min={0}
+            max={120}
+            defaultValue={defaults.deferralMonths ?? 0}
+          />
+        </Field>
+      </div>
+    </details>
   );
 }

@@ -7,6 +7,7 @@ export * from "./projection";
 export * from "./rate";
 export * from "./recurrence";
 export * from "./rent";
+export * from "./rent-ledger";
 export * from "./schedule";
 export * from "./types";
 

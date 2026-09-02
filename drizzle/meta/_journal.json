@@ -29,6 +29,20 @@
       "when": 1788359195338,
       "tag": "0003_created_by_set_null",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788361378986,
+      "tag": "0004_actual_entry_rent_tracking",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788361546938,
+      "tag": "0005_drop_marginal_tax_rate",
+      "breakpoints": true
     }
   ]
 }

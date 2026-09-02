@@ -17,11 +17,13 @@ abandonné avec Eric.
 - [ ] **Chiffres restants du bien A** — revenu cadastral, précompte immobilier
       actuel, loyer visé, et le mode de prime des assurances (ASRD, incendie).
       Nécessaires pour encoder le bien au lot 2, pas pour le moteur.
-- [ ] **Taux marginal d'imposition** — nécessaire au rendement net-net.
-      Défaut provisoire : 50 %, affiché comme hypothèse modifiable.
 
 ## Décidé en cours de route
 
+- Le **taux marginal d'imposition** est retiré du schéma et du formulaire. Il
+  était saisi et stocké sans qu'aucun calcul ne le lise : ni le moteur, ni un
+  calculateur assisté. Il revient avec son premier consommateur réel, le
+  rendement net-net.
 - Le **précompte immobilier** est une simple ligne de frais récurrente, ajustée à la
   main après réception de l'avertissement-extrait de rôle. Pas de champ dédié
   « PI avant / après mise en location » : ça n'aurait servi qu'une fois.
@@ -59,6 +61,17 @@ abandonné avec Eric.
       un bien et tout ce qu'il contient. Ajouter une confirmation.
 - [ ] **Périodes de taux multiples dans l'UI** — le formulaire de prêt ne gère que
       la période initiale ; le moteur en accepte autant qu'on veut.
+
+## Suite du lot 5
+
+- [ ] **Pointer les frais réels** — seuls les loyers sont suivis. Les dépenses
+      constatées se rapprocheraient d'une `flow_line` via `flow_line_id`, déjà
+      dans le schéma.
+- [ ] **Un versement qui couvre plusieurs mois** — aujourd'hui un versement
+      désigne un seul mois d'échéance. Un virement de 2 400 € pour deux mois
+      demande deux saisies.
+- [ ] **Rappel de retard** — l'ardoise est visible mais passive. Un cron
+      quotidien plus un e-mail la rendraient active (voir Q31).
 
 ## Backlog
 

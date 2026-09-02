@@ -21,7 +21,6 @@ function bundle(overrides: Partial<PropertyBundle> = {}): PropertyBundle {
       cadastralIncome: eurosToCents(1_250),
       currentValue: eurosToCents(320_000),
       valueGrowthRatePpm: percentToPpm(1.5),
-      marginalTaxRatePpm: percentToPpm(50),
       estimatedTaxYearly: eurosToCents(1_800),
       defaultInflationRatePpm: percentToPpm(2),
       horizonYears: 20,

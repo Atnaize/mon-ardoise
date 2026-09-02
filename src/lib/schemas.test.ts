@@ -3,7 +3,15 @@ import { describe, expect, it } from "vitest";
 import { eurosToCents } from "@/engine/money";
 import { percentToPpm } from "@/engine/rate";
 
-import { euros, flowLineSchema, optionalEuros, percent, propertySchema } from "./schemas";
+import {
+  euros,
+  flowLineSchema,
+  loanSchema,
+  optionalEuros,
+  percent,
+  propertySchema,
+  wizardSchema,
+} from "./schemas";
 
 describe("euros", () => {
   it("accepte le point comme la virgule", () => {
@@ -51,7 +59,6 @@ describe("propertySchema", () => {
     cadastralIncome: "",
     currentValue: "190000",
     valueGrowthRate: "0",
-    marginalTaxRate: "50",
     estimatedTaxYearly: "0",
     horizonYears: "20",
   };
@@ -88,7 +95,6 @@ describe("flowLineSchema · unité du montant", () => {
     startDate: "2026-10-01",
     endDate: "",
     indexationRate: "0",
-    capitalize: "",
     amortizationYears: "",
   };
 
@@ -102,7 +108,77 @@ describe("flowLineSchema · unité du montant", () => {
     expect(parsed.amount).toBe(percentToPpm(8));
   });
 
+  it("accepte la case étalement décochée, absente du FormData", () => {
+    expect(flowLineSchema.parse(base).capitalize).toBe(false);
+  });
+
+  it("lit la case étalement cochée", () => {
+    expect(flowLineSchema.parse({ ...base, capitalize: "on" }).capitalize).toBe(true);
+  });
+
   it("laisse amortizationYears à null sans étalement", () => {
     expect(flowLineSchema.parse(base).amortizationYears).toBeNull();
+  });
+});
+
+describe("loanSchema · conventions belges par défaut", () => {
+  const withoutConventions = {
+    label: "Prêt hypothécaire",
+    principal: "150000",
+    startDate: "2023-10-01",
+    termMonths: "241",
+    annualRate: "3,06",
+  };
+
+  it("valide un prêt saisi sans les champs de convention", () => {
+    const parsed = loanSchema.parse(withoutConventions);
+
+    expect(parsed.rateBasis).toBe("nominal_12");
+    expect(parsed.amortization).toBe("annuity");
+    expect(parsed.deferralType).toBe("none");
+    expect(parsed.deferralMonths).toBe(0);
+  });
+
+  it("respecte les conventions explicites de l'édition avancée", () => {
+    const parsed = loanSchema.parse({
+      ...withoutConventions,
+      rateBasis: "equivalent",
+      amortization: "constant_principal",
+      deferralType: "interest_only",
+      deferralMonths: "24",
+    });
+
+    expect(parsed.rateBasis).toBe("equivalent");
+    expect(parsed.amortization).toBe("constant_principal");
+    expect(parsed.deferralType).toBe("interest_only");
+    expect(parsed.deferralMonths).toBe(24);
+  });
+
+  it("refuse une convention inconnue", () => {
+    expect(loanSchema.safeParse({ ...withoutConventions, rateBasis: "actuariel" }).success).toBe(
+      false,
+    );
+  });
+
+  it("valide le prêt du wizard de création, qui n'affiche aucune convention", () => {
+    const parsed = wizardSchema.safeParse({
+      property: {
+        name: "Maison",
+        type: "house",
+        region: "wallonie",
+        status: "rented",
+        acquisitionDate: "",
+        purchasePrice: "200000",
+        cadastralIncome: "",
+        currentValue: "190000",
+        valueGrowthRate: "0",
+        estimatedTaxYearly: "0",
+        horizonYears: "20",
+      },
+      loan: withoutConventions,
+    });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.loan?.rateBasis).toBe("nominal_12");
   });
 });

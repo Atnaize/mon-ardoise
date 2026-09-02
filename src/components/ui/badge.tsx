@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
-type Tone = "neutral" | "positive" | "accent" | "warning";
+type Tone = "neutral" | "positive" | "accent" | "warning" | "negative";
 
 const TONES: Record<Tone, string> = {
   neutral: "border-line text-ink-3",
   positive: "border-positive text-positive",
   accent: "border-accent text-accent",
   warning: "border-warning text-warning",
+  negative: "border-negative text-negative",
 };
 
 export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: Tone }) {

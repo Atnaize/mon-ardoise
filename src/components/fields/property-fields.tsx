@@ -17,7 +17,6 @@ export interface PropertyDefaults {
   cadastralIncome?: number | null;
   currentValue?: number | null;
   valueGrowthRatePpm?: number;
-  marginalTaxRatePpm?: number;
   estimatedTaxYearly?: number;
   horizonYears?: number;
 }
@@ -146,14 +145,6 @@ export function PropertyFields({
           name={name("estimatedTaxYearly")}
           inputMode="decimal"
           defaultValue={moneyField(defaults.estimatedTaxYearly ?? 0)}
-        />
-      </Field>
-
-      <Field label={`${t("fields.marginalTaxRate")} · %`} name={name("marginalTaxRate")}>
-        <Input
-          name={name("marginalTaxRate")}
-          inputMode="decimal"
-          defaultValue={percentField(defaults.marginalTaxRatePpm ?? 500_000)}
         />
       </Field>
 

@@ -61,7 +61,6 @@ export const property = pgTable("property", {
   cadastralIncome: integer("cadastral_income"),
   currentValue: integer("current_value"),
   valueGrowthRatePpm: integer("value_growth_rate_ppm").notNull().default(0),
-  marginalTaxRatePpm: integer("marginal_tax_rate_ppm").notNull().default(500_000),
   estimatedTaxYearly: integer("estimated_tax_yearly").notNull().default(0),
   defaultInflationRatePpm: integer("default_inflation_rate_ppm").notNull().default(20_000),
   horizonYears: integer("horizon_years").notNull().default(20),
@@ -235,8 +234,14 @@ export const actualEntry = pgTable(
     label: text("label").notNull(),
     amount: integer("amount").notNull(),
     flowLineId: uuid("flow_line_id").references(() => flowLine.id, { onDelete: "set null" }),
+    leaseId: uuid("lease_id").references(() => lease.id, { onDelete: "set null" }),
+    dueMonth: integer("due_month"),
     createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [index("actual_entry_property_date_idx").on(t.propertyId, t.date)],
+  (t) => [
+    index("actual_entry_property_date_idx").on(t.propertyId, t.date),
+    index("actual_entry_due_month_idx").on(t.propertyId, t.dueMonth),
+  ],
 );

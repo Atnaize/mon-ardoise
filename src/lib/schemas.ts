@@ -50,6 +50,11 @@ export const optionalIsoDate = z
   .union([isoDate, z.literal("")])
   .transform((value) => (value === "" ? null : value));
 
+export const checkbox = z
+  .string()
+  .optional()
+  .transform((value) => value === "on" || value === "true");
+
 export const propertySchema = z.object({
   name: z.string().trim().min(1, "Donne un nom au bien").max(120),
   type: z.enum(["house", "apartment"]),
@@ -60,7 +65,6 @@ export const propertySchema = z.object({
   cadastralIncome: optionalEuros,
   currentValue: optionalEuros,
   valueGrowthRate: percent,
-  marginalTaxRate: percent,
   estimatedTaxYearly: euros,
   horizonYears: z.coerce.number().int().min(1).max(50),
 });
@@ -71,10 +75,10 @@ export const loanSchema = z.object({
   startDate: isoDate,
   termMonths: z.coerce.number().int().min(1).max(600),
   annualRate: percent,
-  rateBasis: z.enum(["nominal_12", "equivalent"]),
-  amortization: z.enum(["annuity", "constant_principal"]),
-  deferralMonths: z.coerce.number().int().min(0).max(120),
-  deferralType: z.enum(["none", "interest_only", "full"]),
+  rateBasis: z.enum(["nominal_12", "equivalent"]).default("nominal_12"),
+  amortization: z.enum(["annuity", "constant_principal"]).default("annuity"),
+  deferralMonths: z.coerce.number().int().min(0).max(120).default(0),
+  deferralType: z.enum(["none", "interest_only", "full"]).default("none"),
 });
 
 export const leaseSchema = z.object({
@@ -98,7 +102,7 @@ const flowLineFields = z.object({
   startDate: isoDate,
   endDate: optionalIsoDate,
   indexationRate: percent,
-  capitalize: z.coerce.boolean(),
+  capitalize: checkbox,
   amortizationYears: z
     .union([z.coerce.number().int().min(1).max(50), z.literal("")])
     .transform((value) => (value === "" ? null : value)),
@@ -112,6 +116,13 @@ export const flowLineSchema = flowLineFields.transform((data) => ({
       : eurosToCents(data.amount),
 }));
 
+export const rentPaymentSchema = z.object({
+  dueMonth: z.coerce.number().int().min(0),
+  amount: euros,
+  date: isoDate,
+  leaseId: z.union([z.uuid(), z.literal("")]).transform((value) => (value === "" ? null : value)),
+});
+
 export const wizardSchema = z.object({
   property: propertySchema,
   loan: loanSchema.optional(),
@@ -122,3 +133,4 @@ export type PropertyInput = z.output<typeof propertySchema>;
 export type LoanInput = z.output<typeof loanSchema>;
 export type LeaseInput = z.output<typeof leaseSchema>;
 export type FlowLineInput = z.output<typeof flowLineSchema>;
+export type RentPaymentInput = z.output<typeof rentPaymentSchema>;

@@ -89,10 +89,11 @@ Le **précompte immobilier va augmenter** sur le bien loué : les réductions li
 à l'habitation propre tombent. C'est une ligne de frais annuelle comme une autre,
 ajustée à la main dès réception de l'avertissement-extrait de rôle.
 
-Périmètre V1 : un champ « impôt estimé par an » que tu remplis, assisté d'un
-calculateur qui propose `RC × coefficient d'indexation × 1,4 × taux marginal`. Le
-calcul fiscal complet part au backlog — la fiscalité belge du logement bouge tous
-les deux ans, et la coder aujourd'hui c'est acheter de la maintenance.
+Périmètre V1 : un seul champ « impôt estimé par an » que tu remplis à la main,
+le calcul `RC × coefficient d'indexation × 1,4 × taux marginal` restant à faire
+de ton côté. Le calculateur assisté et le calcul fiscal complet partent au
+backlog — la fiscalité belge du logement bouge tous les deux ans, et la coder
+aujourd'hui c'est acheter de la maintenance.
 
 Hypothèse enregistrée telle quelle, non vérifiée : le bien étant resté résidence
 principale plus de trois ans, aucune reprise d'avantage à l'enregistrement n'est
@@ -129,7 +130,7 @@ chaîne pour éviter les décalages de fuseau.
 
 | Table | Rôle | Champs notables |
 | --- | --- | --- |
-| `property` | le bien | `status` (preparing / rented / occupied), `cadastral_income`, `marginal_tax_rate_ppm`, `estimated_tax_yearly`, `horizon_years` |
+| `property` | le bien | `status` (preparing / rented / occupied), `cadastral_income`, `estimated_tax_yearly`, `horizon_years` |
 | `property_member` | accès **et** quote-part | `role`, `ownership_share_permille`, `contribution_share_permille` |
 | `invitation` | partage d'un bien | `email` ou `code`, `role`, `expires_at` |
 | `loan` | un par crédit — le prêt hypothécaire et le mandat sont deux lignes | `principal`, `term_months`, `amortization`, `deferral_months`, `deferral_type` |
@@ -139,7 +140,7 @@ chaîne pour éviter les décalages de fuseau.
 | `flow_line` | tout frais, tout revenu | `recurrence`, `indexation_rate_ppm`, `capitalize`, `amortization_years` |
 | `lease` | bail 1 an puis 3-6-9 | `monthly_rent` hors charges, `indexation_rate_ppm` |
 | `scenario` | comparaison côte à côte | `is_baseline`, `overrides` (jsonb) |
-| `actual_entry` | le réel constaté | `flow_line_id` pour le rapprochement |
+| `actual_entry` | le réel constaté | `lease_id` et `due_month` pour pointer un loyer sur son échéance, `flow_line_id` pour le rapprochement des frais |
 | `user` `session` `account` `verification` | better-auth | `user.locale` ajouté |
 
 Schéma source : [`src/db/schema/`](../src/db/schema/) · migration :
@@ -260,7 +261,7 @@ chiffres faux.
 | 2 · Saisie | Adaptateur base → `ProjectionInput`, création bien + prêt + bail, lignes de frais et revenus, synthèse | **Livré** — édition après création encore à faire |
 | 3 · Restitution | Timeline et vue annuelle **livrées** au lot 2 ; restent les graphiques Recharts | **Suivant** |
 | 4 · Scénarios | Duplication, substitution d'hypothèses, comparaison côte à côte | À faire |
-| 5 · Réel vs prévu | Saisie rapide mobile, rapprochement, écrans d'écart | À faire |
+| 5 · Réel vs prévu | Loyers : encodage mois par mois, statut par échéance, ardoise et alerte de retard | **Livré pour les loyers** — les frais réels restent à pointer |
 | 6 · Partage | Invitations, rôles, quote-parts, vue consolidée multi-biens | À faire |
 | 7 · Exports | `.xlsx` avec hypothèses en feuille séparée, PDF de synthèse | À faire |
 | 8 · Finitions | Hors-ligne, anglais complet, accessibilité, budget de perf mobile | À faire |
@@ -289,8 +290,6 @@ Le tableau d'amortissement a été fourni et sert de test de calibration. Il res
 1. **Revenu cadastral, précompte immobilier actuel, loyer visé.**
 2. **Le mode d'assurance** — ASRD et incendie, prime dans la mensualité,
    annuelle, trimestrielle ou unique financée.
-3. **Le taux marginal d'imposition** — pour le rendement net-net. Défaut
-   provisoire : 50 %, affiché comme hypothèse modifiable.
 
 Deux points relevés dans le contrat BNP et volontairement hors périmètre :
 

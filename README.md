@@ -25,13 +25,19 @@ projection mensuelle, dix-huit indicateurs, comparaison de scénarios.
 avec son prêt et son bail, ajout et suppression des lignes de frais et de revenus,
 écran de synthèse avec les douze indicateurs, timeline mensuelle et vue annuelle.
 
+**Lot 5 · L'ardoise — livré.** Encodage des loyers reçus mois par mois, avec
+statut par échéance (payé, partiel, impayé, trop-perçu, à venir), total dû par le
+locataire, et alerte de retard sur la fiche du bien comme sur la liste. C'est ce
+qui donne son nom à l'app.
+
 Bien, prêts, baux et lignes se créent, se modifient et se suppriment. Les
 formulaires de création et d'édition partagent les mêmes composants de champs :
 un champ ajouté dans `src/components/fields/` apparaît des deux côtés.
 
 **Ce qui n'y est pas encore** — l'UI des assurances et des remboursements
 anticipés (le schéma et le moteur les portent déjà), la confirmation avant
-suppression, les graphiques du lot 3, les scénarios du lot 4.
+suppression, les graphiques du lot 3, les scénarios du lot 4, et le suivi du réel
+sur les *frais* (seuls les loyers sont pointés).
 
 ## Démarrer
 
@@ -113,7 +119,7 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 | --- | --- | --- |
 | Primitives | `money` `rate` `month` | centimes entiers, taux en ppm, index de mois |
 | Contrat | `types` | les types d'entrée et de sortie, et rien d'autre |
-| Calcul | `annuity` `schedule` `recurrence` `rent` `projection` `indicators` `compare` | une préoccupation par module |
+| Calcul | `annuity` `schedule` `recurrence` `rent` `rent-ledger` `projection` `indicators` `compare` | une préoccupation par module |
 | Façade | `index` | le barrel et `runProjection()` |
 
 `runProjection(input)` est le seul point d'entrée dont l'UI aura besoin. Le lot 2

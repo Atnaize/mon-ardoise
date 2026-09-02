@@ -1,6 +1,10 @@
 "use client";
 
-import { LoanFields, type LoanDefaults } from "@/components/fields/loan-fields";
+import {
+  LoanAdvancedFields,
+  LoanFields,
+  type LoanDefaults,
+} from "@/components/fields/loan-fields";
 import { InlineForm } from "@/components/inline-form";
 import { saveLoanAction } from "@/server/actions";
 
@@ -21,7 +25,12 @@ export function LoanForm({
 }) {
   return (
     <InlineForm label={label} locale={locale} action={saveLoanAction.bind(null, propertyId, loanId)}>
-      {(errors) => <LoanFields errors={errors} defaults={defaults} today={today} />}
+      {(errors) => (
+        <>
+          <LoanFields errors={errors} defaults={defaults} today={today} />
+          <LoanAdvancedFields errors={errors} defaults={defaults} />
+        </>
+      )}
     </InlineForm>
   );
 }

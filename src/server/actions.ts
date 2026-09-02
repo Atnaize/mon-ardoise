@@ -4,10 +4,19 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/db";
-import { flowLine, lease, loan, loanRatePeriod, property, propertyMember } from "@/db/schema";
+import { actualEntry, flowLine, lease, loan, loanRatePeriod, property, propertyMember } from "@/db/schema";
 import { redirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { flowLineSchema, leaseSchema, loanSchema, propertySchema, wizardSchema } from "@/lib/schemas";
+import { toIsoDate } from "@/engine/month";
+import { RENT_CATEGORY } from "@/lib/categories";
+import {
+  flowLineSchema,
+  leaseSchema,
+  loanSchema,
+  propertySchema,
+  rentPaymentSchema,
+  wizardSchema,
+} from "@/lib/schemas";
 import { currentUser } from "@/lib/session";
 
 import { fieldErrors, nestFormData, succeeded, type ActionState } from "./form";
@@ -76,7 +85,6 @@ export async function createPropertyAction(
         cadastralIncome: input.cadastralIncome,
         currentValue: input.currentValue,
         valueGrowthRatePpm: input.valueGrowthRate,
-        marginalTaxRatePpm: input.marginalTaxRate,
         estimatedTaxYearly: input.estimatedTaxYearly,
         horizonYears: input.horizonYears,
         createdBy: user.id,
@@ -163,7 +171,6 @@ export async function updatePropertyAction(
       cadastralIncome: input.cadastralIncome,
       currentValue: input.currentValue,
       valueGrowthRatePpm: input.valueGrowthRate,
-      marginalTaxRatePpm: input.marginalTaxRate,
       estimatedTaxYearly: input.estimatedTaxYearly,
       horizonYears: input.horizonYears,
       updatedAt: new Date(),
@@ -373,6 +380,59 @@ export async function deleteFlowLineAction(
   await db
     .delete(flowLine)
     .where(and(eq(flowLine.id, lineId), eq(flowLine.propertyId, propertyId)));
+
+  refresh();
+}
+
+export async function saveRentPaymentAction(
+  propertyId: string,
+  entryId: string | null,
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await editorOf(propertyId, localeFrom(formData));
+
+  const parsed = rentPaymentSchema.safeParse(nestFormData(formData));
+
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error) };
+  }
+
+  const input = parsed.data;
+  const values = {
+    date: input.date,
+    kind: "income" as const,
+    category: RENT_CATEGORY,
+    label: `Loyer ${toIsoDate(input.dueMonth, 1).slice(0, 7)}`,
+    amount: input.amount,
+    leaseId: input.leaseId,
+    dueMonth: input.dueMonth,
+  };
+
+  if (entryId) {
+    await db
+      .update(actualEntry)
+      .set({ ...values, updatedAt: new Date() })
+      .where(and(eq(actualEntry.id, entryId), eq(actualEntry.propertyId, propertyId)));
+  } else {
+    await db.insert(actualEntry).values({ propertyId, createdBy: user.id, ...values });
+  }
+
+  refresh();
+
+  return succeeded();
+}
+
+export async function deleteRentPaymentAction(
+  propertyId: string,
+  entryId: string,
+  formData: FormData,
+): Promise<void> {
+  await editorOf(propertyId, localeFrom(formData));
+
+  await db
+    .delete(actualEntry)
+    .where(and(eq(actualEntry.id, entryId), eq(actualEntry.propertyId, propertyId)));
 
   refresh();
 }
