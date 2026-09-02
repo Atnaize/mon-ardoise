@@ -46,6 +46,7 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 | `npm run typecheck` | `next typegen` puis `tsc --noEmit` |
 | `npm run lint` | ESLint |
 | `npm test` | Tests du moteur de calcul (Vitest) |
+| `npm run check:auth-schema` | Vérifie que le schéma Drizzle satisfait better-auth |
 | `npm run build` | Build de production |
 | `npm run db:generate` | Génère une migration SQL depuis le schéma |
 | `npm run db:migrate` | Applique les migrations |
@@ -95,6 +96,12 @@ Deux écarts assumés par rapport au cadrage initial, décidés après vérifica
   L'advisory concerne le serveur de développement d'esbuild, que drizzle-kit
   n'expose pas ; l'outil ne tourne qu'en local et en CI, jamais en production.
   Corriger imposerait de régresser en drizzle-kit 0.18.
+- **Le schéma des tables d'auth est dicté par better-auth, pas par nous.** Il est
+  écrit à la main dans `src/db/schema/auth.ts`, et `npm run check:auth-schema`
+  interroge `getAuthTables()` pour vérifier qu'aucun champ attendu ne manque et
+  qu'aucun champ requis n'est nullable. Le check tourne en CI. Après une montée
+  de version de better-auth, s'il échoue : ajouter les champs, puis
+  `npm run db:generate && npm run db:migrate`.
 - `drizzle-kit` est un CLI autonome : il ne charge pas `.env.local` comme le fait
   Next. C'est `drizzle.config.ts` qui appelle `dotenv` explicitement, sur
   `.env.local` puis `.env`. Sans ça, `db:migrate` échoue sur `url: ''`.

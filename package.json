@@ -11,7 +11,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "check:auth-schema": "tsx scripts/check-auth-schema.mts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

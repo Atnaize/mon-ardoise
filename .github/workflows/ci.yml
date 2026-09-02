@@ -28,6 +28,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Auth schema conformance
+        run: npm run check:auth-schema
+
       - name: Engine tests
         run: npm test
 
