@@ -95,4 +95,7 @@ Deux écarts assumés par rapport au cadrage initial, décidés après vérifica
   L'advisory concerne le serveur de développement d'esbuild, que drizzle-kit
   n'expose pas ; l'outil ne tourne qu'en local et en CI, jamais en production.
   Corriger imposerait de régresser en drizzle-kit 0.18.
+- `drizzle-kit` est un CLI autonome : il ne charge pas `.env.local` comme le fait
+  Next. C'est `drizzle.config.ts` qui appelle `dotenv` explicitement, sur
+  `.env.local` puis `.env`. Sans ça, `db:migrate` échoue sur `url: ''`.
 - Les icônes sont générées par `python3 scripts/generate-icons.py` (PIL).
