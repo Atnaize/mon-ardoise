@@ -120,6 +120,8 @@ export interface MonthlyProjection {
   expenses: Cents;
   /** Part des charges qui se répète : ce qui fait un rendement, par opposition aux frais ponctuels. */
   recurringExpenses: Cents;
+  /** Part des charges qui relève de l'acquisition du bien. */
+  acquisitionExpenses: Cents;
   loanPayment: Cents;
   loanInsurance: Cents;
   loanPenalty: Cents;
@@ -146,8 +148,15 @@ export interface Indicators {
   cashInvested: Cents;
   grossYieldPpm: Ppm | null;
   netYieldPpm: Ppm | null;
-  netNetYieldPpm: Ppm | null;
   cashOnCashPpm: Ppm | null;
+  /** Frais engagés pour acquérir le bien : notaire, enregistrement, agence, mise en location. */
+  upfrontCosts: Cents;
+  /** Frais ponctuels survenus après la mise en location. */
+  rentalPeriodCosts: Cents;
+  /** Cumul des charges récurrentes sur tout l'horizon. */
+  recurringCosts: Cents;
+  /** Prix d'acquisition, tous frais et coût du crédit compris, sur l'horizon. */
+  totalCostOfOwnership: Cents;
   breakEvenMonth: YearMonth | null;
   worstCumulative: Cents;
   totalInterest: Cents;

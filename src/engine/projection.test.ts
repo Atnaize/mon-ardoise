@@ -151,7 +151,6 @@ describe("project · bien occupé sans loyer", () => {
 
     expect(indicators.grossYieldPpm).toBeNull();
     expect(indicators.netYieldPpm).toBeNull();
-    expect(indicators.netNetYieldPpm).toBeNull();
     expect(indicators.cashOnCashPpm).toBeNull();
     expect(indicators.annualRent).toBe(0);
   });
@@ -299,6 +298,77 @@ describe("computeIndicators · coûts d'acquisition", () => {
   });
 });
 
+describe("computeIndicators · détail des coûts", () => {
+  function oneOffLine(id: string, euros: number, monthOffset: number, acquisition: boolean): FlowLine {
+    return {
+      id,
+      kind: "expense",
+      label: id,
+      amount: eurosToCents(euros),
+      amountMode: "fixed",
+      recurrence: "one_off",
+      recurrenceInterval: 1,
+      startMonth: START + monthOffset,
+      endMonth: null,
+      indexationRatePpm: 0,
+      indexationMonth: null,
+      capitalize: false,
+      amortizationYears: null,
+      isAcquisitionCost: acquisition,
+    };
+  }
+
+  const scenario = input({
+    lines: [
+      oneOffLine("notaire", 25_000, 0, true),
+      oneOffLine("agence", 2_000, 0, true),
+      oneOffLine("chaudiere", 4_000, 30, false),
+      yearlyExpense("assurance", 340),
+    ],
+  });
+
+  const { indicators, projection } = runProjection(scenario);
+
+  it("sépare les trois natures de frais", () => {
+    expect(indicators.upfrontCosts).toBe(eurosToCents(27_000));
+    expect(indicators.rentalPeriodCosts).toBe(eurosToCents(4_000));
+    expect(indicators.recurringCosts).toBe(eurosToCents(340 * 20));
+  });
+
+  it("additionne les frais au départ dans le coût d'acquisition", () => {
+    expect(indicators.acquisitionCost).toBe(eurosToCents(250_000 + 27_000));
+  });
+
+  it("boucle : le coût total est la somme exacte de ses lignes", () => {
+    const creditCost = indicators.totalCreditCost;
+    const parts =
+      eurosToCents(250_000) +
+      indicators.upfrontCosts +
+      indicators.rentalPeriodCosts +
+      indicators.recurringCosts +
+      creditCost;
+
+    expect(indicators.totalCostOfOwnership).toBe(parts);
+  });
+
+  it("ne compte aucune charge deux fois", () => {
+    const allExpenses = projection.reduce((total, month) => total + month.expenses, 0);
+
+    expect(indicators.upfrontCosts + indicators.rentalPeriodCosts + indicators.recurringCosts).toBe(
+      allExpenses,
+    );
+  });
+
+  it("reste cohérent sans aucun frais", () => {
+    const bare = runProjection(input({ lines: [] })).indicators;
+
+    expect(bare.upfrontCosts).toBe(0);
+    expect(bare.rentalPeriodCosts).toBe(0);
+    expect(bare.recurringCosts).toBe(0);
+    expect(bare.totalCostOfOwnership).toBe(eurosToCents(250_000) + bare.totalCreditCost);
+  });
+});
+
 describe("runProjection", () => {
   const { projection, indicators } = runProjection(input());
 
@@ -311,7 +381,6 @@ describe("runProjection", () => {
     expect(indicators.acquisitionCost).toBe(eurosToCents(250_000));
     expect(indicators.grossYieldPpm).toBe(percentToPpm(5.76));
     expect(indicators.netYieldPpm).toBe(percentToPpm(5.144));
-    expect(indicators.netNetYieldPpm).toBe(percentToPpm(4.424));
   });
 
   it("calcule l'apport immobilisé et le cash-on-cash", () => {

@@ -90,12 +90,17 @@ export const leaseSchema = z.object({
   status: z.enum(["planned", "active", "ended"]),
 });
 
+export const NATURES = ["upfront", "one_off", "recurring"] as const;
+
+export type Nature = (typeof NATURES)[number];
+
 const flowLineFields = z.object({
   kind: z.enum(["expense", "income"]),
   label: z.string().trim().min(1, "Donne un libellé").max(120),
   amount: decimalField("Montant invalide"),
   amountMode: z.enum(["fixed", "percent_of_rent"]),
-  recurrence: z.enum(["one_off", "monthly", "quarterly", "yearly", "every_n_years"]),
+  nature: z.enum(NATURES),
+  periodicity: z.enum(["monthly", "quarterly", "yearly", "every_n_years"]).optional(),
   recurrenceInterval: z.coerce.number().int().min(1).max(50),
   startDate: isoDate,
   endDate: optionalIsoDate,
@@ -104,7 +109,6 @@ const flowLineFields = z.object({
   amortizationYears: z
     .union([z.coerce.number().int().min(1).max(50), z.literal("")])
     .transform((value) => (value === "" ? null : value)),
-  isAcquisitionCost: checkbox,
 });
 
 export const flowLineSchema = flowLineFields.transform((data) => ({
@@ -113,6 +117,9 @@ export const flowLineSchema = flowLineFields.transform((data) => ({
     data.amountMode === "percent_of_rent"
       ? percentToPpm(data.amount)
       : eurosToCents(data.amount),
+  recurrence: data.nature === "recurring" ? (data.periodicity ?? "yearly") : ("one_off" as const),
+  isAcquisitionCost: data.nature === "upfront",
+  indexationRate: data.nature === "recurring" ? data.indexationRate : 0,
 }));
 
 export const rentPaymentSchema = z.object({

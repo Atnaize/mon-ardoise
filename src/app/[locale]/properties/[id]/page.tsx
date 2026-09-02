@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 
 import { AppShell, PageTitle } from "@/components/app-shell";
+import { CostBreakdown } from "@/components/cost-breakdown";
 import { DeleteForm } from "@/components/forms/delete-form";
 import { FlowLineForm } from "@/components/forms/flow-line-form";
 import { LeaseForm } from "@/components/forms/lease-form";
@@ -13,6 +14,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Stat, StatGrid } from "@/components/ui/stat";
 import { Link } from "@/i18n/navigation";
 import { money, monthLabel, percent } from "@/lib/format";
+import { natureOf } from "@/lib/nature";
 import { todayIso } from "@/lib/clock";
 import { currentUser } from "@/lib/session";
 import {
@@ -24,13 +26,14 @@ import { loadProjection } from "@/server/properties";
 
 const STATUS_TONE = { preparing: "warning", rented: "positive", occupied: "neutral" } as const;
 
-const RECURRENCE_KEY = {
-  one_off: "OneOff",
+const PERIODICITY_KEY = {
   monthly: "Monthly",
   quarterly: "Quarterly",
   yearly: "Yearly",
   every_n_years: "EveryNYears",
 } as const;
+
+const NATURE_KEY = { upfront: "Upfront", one_off: "OneOff", recurring: "Recurring" } as const;
 
 export default async function PropertyPage({ params }: PageProps<"/[locale]/properties/[id]">) {
   const { locale, id } = await params;
@@ -122,15 +125,8 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           value={percent(indicators.grossYieldPpm, locale)}
         />
         <Stat label={t("summary.netYield")} value={percent(indicators.netYieldPpm, locale)} />
-        <Stat
-          label={t("summary.netNetYield")}
-          hint={t("summary.netNetYieldHint")}
-          value={percent(indicators.netNetYieldPpm, locale)}
-        />
         <Stat label={t("summary.cashOnCash")} value={percent(indicators.cashOnCashPpm, locale)} />
-        <Stat label={t("summary.acquisitionCost")} value={money(indicators.acquisitionCost, locale)} />
         <Stat label={t("summary.cashInvested")} value={money(indicators.cashInvested, locale)} />
-        <Stat label={t("summary.totalCreditCost")} value={money(indicators.totalCreditCost, locale)} />
         <Stat
           label={t("summary.propertyValue")}
           hint={
@@ -153,6 +149,14 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           value={money(indicators.finalNetWorth, locale)}
         />
       </StatGrid>
+
+      <CostBreakdown
+        indicators={indicators}
+        purchasePrice={bundle.property.purchasePrice ?? 0}
+        creditCost={indicators.totalCreditCost}
+        horizonYears={bundle.property.horizonYears}
+        locale={locale}
+      />
 
       {ledger.outstanding > 0 ? (
         <Link
@@ -281,7 +285,10 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                       <span className="text-sm font-medium text-ink">{line.label}</span>
                       <span className="text-xs text-ink-3">
                         {t(`fields.flow${line.kind === "expense" ? "Expense" : "Income"}`)} ·{" "}
-                        {t(`fields.recurrence${RECURRENCE_KEY[line.recurrence]}`)}
+                        {t(`fields.nature${NATURE_KEY[natureOf(line)]}`)}
+                        {line.recurrence !== "one_off"
+                          ? ` · ${t(`fields.recurrence${PERIODICITY_KEY[line.recurrence]}`)}`
+                          : ""}
                         {line.capitalize && line.amortizationYears
                           ? ` · ${line.amortizationYears} ${t("fields.years")}`
                           : ""}

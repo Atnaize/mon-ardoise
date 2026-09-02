@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Checkbox, Field, Input, Select } from "@/components/ui/field";
+import { natureOf } from "@/lib/nature";
+import type { Nature } from "@/lib/schemas";
 import { moneyField, percentField, textField } from "@/lib/to-form";
 
 import { errorFor, prefixed, type FieldErrors } from "./prefix";
@@ -19,8 +21,8 @@ export interface FlowLineDefaults {
   endDate?: string | null;
   indexationRatePpm?: number;
   capitalize?: boolean;
-  isAcquisitionCost?: boolean;
   amortizationYears?: number | null;
+  isAcquisitionCost?: boolean;
 }
 
 export function FlowLineFields({
@@ -38,13 +40,41 @@ export function FlowLineFields({
   const name = (field: string) => prefixed(prefix, field);
   const error = (field: string) => errorFor(errors, prefix, field);
 
+  const [nature, setNature] = useState<Nature>(
+    defaults.recurrence
+      ? natureOf({
+          recurrence: defaults.recurrence,
+          isAcquisitionCost: defaults.isAcquisitionCost ?? false,
+        })
+      : "recurring",
+  );
+  const [periodicity, setPeriodicity] = useState(
+    defaults.recurrence && defaults.recurrence !== "one_off" ? defaults.recurrence : "yearly",
+  );
   const [capitalize, setCapitalize] = useState(defaults.capitalize ?? false);
-  const [acquisition, setAcquisition] = useState(defaults.isAcquisitionCost ?? false);
-  const [recurrence, setRecurrence] = useState(defaults.recurrence ?? "yearly");
   const [amountMode, setAmountMode] = useState(defaults.amountMode ?? "fixed");
+
+  const recurring = nature === "recurring";
 
   return (
     <>
+      <div className="flex flex-col gap-2 sm:col-span-2">
+        <Field label={t("fields.nature")} name={name("nature")}>
+          <Select
+            name={name("nature")}
+            value={nature}
+            onChange={(event) => setNature(event.target.value as Nature)}
+          >
+            <option value="upfront">{t("fields.natureUpfront")}</option>
+            <option value="one_off">{t("fields.natureOneOff")}</option>
+            <option value="recurring">{t("fields.natureRecurring")}</option>
+          </Select>
+        </Field>
+        <p className="rounded-ui bg-surface-2 px-3 py-2 text-xs leading-relaxed text-ink-2">
+          {t(`fields.nature${nature === "upfront" ? "Upfront" : nature === "one_off" ? "OneOff" : "Recurring"}Hint`)}
+        </p>
+      </div>
+
       <Field label={t("fields.flowKind")} name={name("kind")}>
         <Select name={name("kind")} defaultValue={defaults.kind ?? "expense"}>
           <option value="expense">{t("fields.flowExpense")}</option>
@@ -55,7 +85,7 @@ export function FlowLineFields({
       <Field label={t("fields.label")} name={name("label")} error={error("label")}>
         <Input
           name={name("label")}
-          placeholder="Précompte immobilier"
+          placeholder={t("fields.labelPlaceholder")}
           defaultValue={textField(defaults.label)}
           required
         />
@@ -90,37 +120,49 @@ export function FlowLineFields({
         />
       </Field>
 
-      <Field label={t("fields.recurrence")} name={name("recurrence")}>
-        <Select
-          name={name("recurrence")}
-          value={recurrence}
-          onChange={(event) => setRecurrence(event.target.value)}
-        >
-          <option value="one_off">{t("fields.recurrenceOneOff")}</option>
-          <option value="monthly">{t("fields.recurrenceMonthly")}</option>
-          <option value="quarterly">{t("fields.recurrenceQuarterly")}</option>
-          <option value="yearly">{t("fields.recurrenceYearly")}</option>
-          <option value="every_n_years">{t("fields.recurrenceEveryNYears")}</option>
-        </Select>
-      </Field>
+      {recurring ? (
+        <>
+          <Field label={t("fields.periodicity")} name={name("periodicity")}>
+            <Select
+              name={name("periodicity")}
+              value={periodicity}
+              onChange={(event) => setPeriodicity(event.target.value)}
+            >
+              <option value="monthly">{t("fields.recurrenceMonthly")}</option>
+              <option value="quarterly">{t("fields.recurrenceQuarterly")}</option>
+              <option value="yearly">{t("fields.recurrenceYearly")}</option>
+              <option value="every_n_years">{t("fields.recurrenceEveryNYears")}</option>
+            </Select>
+          </Field>
 
-      <Field label={t("fields.recurrenceInterval")} name={name("recurrenceInterval")}>
-        <Input
-          name={name("recurrenceInterval")}
-          type="number"
-          min={1}
-          max={50}
-          defaultValue={defaults.recurrenceInterval ?? 1}
-        />
-      </Field>
+          {periodicity === "every_n_years" ? (
+            <Field label={t("fields.recurrenceInterval")} name={name("recurrenceInterval")}>
+              <Input
+                name={name("recurrenceInterval")}
+                type="number"
+                min={1}
+                max={50}
+                defaultValue={defaults.recurrenceInterval ?? 10}
+              />
+            </Field>
+          ) : (
+            <input type="hidden" name={name("recurrenceInterval")} value="1" />
+          )}
 
-      <Field label={`${t("fields.indexationRate")} · %`} name={name("indexationRate")}>
-        <Input
-          name={name("indexationRate")}
-          inputMode="decimal"
-          defaultValue={percentField(defaults.indexationRatePpm ?? 0)}
-        />
-      </Field>
+          <Field label={`${t("fields.indexationRate")} · %`} name={name("indexationRate")}>
+            <Input
+              name={name("indexationRate")}
+              inputMode="decimal"
+              defaultValue={percentField(defaults.indexationRatePpm ?? 0)}
+            />
+          </Field>
+        </>
+      ) : (
+        <>
+          <input type="hidden" name={name("recurrenceInterval")} value="1" />
+          <input type="hidden" name={name("indexationRate")} value="0" />
+        </>
+      )}
 
       <Field label={t("fields.startDate")} name={name("startDate")} error={error("startDate")}>
         <Input type="date" name={name("startDate")} defaultValue={defaults.startDate ?? today} required />
@@ -129,50 +171,42 @@ export function FlowLineFields({
       <Field
         label={`${t("fields.endDate")} · ${t("fields.optional")}`}
         name={name("endDate")}
-        hint={t("fields.endDateOptional")}
+        hint={recurring ? t("fields.endDateOptional") : t("fields.endDateIgnored")}
       >
         <Input type="date" name={name("endDate")} defaultValue={textField(defaults.endDate)} />
       </Field>
 
-      <div className="flex items-center sm:col-span-2">
-        <Checkbox
-          name={name("capitalize")}
-          label={t("fields.capitalize")}
-          checked={capitalize}
-          onChange={(event) => setCapitalize(event.target.checked)}
-        />
-      </div>
-
-      {capitalize ? (
-        <Field
-          label={`${t("fields.amortizationYears")} · ${t("fields.years")}`}
-          name={name("amortizationYears")}
-        >
-          <Input
-            name={name("amortizationYears")}
-            type="number"
-            min={1}
-            max={50}
-            defaultValue={defaults.amortizationYears ?? 10}
-          />
-        </Field>
-      ) : (
+      {recurring ? (
         <input type="hidden" name={name("amortizationYears")} value="" />
-      )}
+      ) : (
+        <>
+          <div className="flex items-center sm:col-span-2">
+            <Checkbox
+              name={name("capitalize")}
+              label={t("fields.capitalize")}
+              checked={capitalize}
+              onChange={(event) => setCapitalize(event.target.checked)}
+            />
+          </div>
 
-      {recurrence === "one_off" ? (
-        <div className="flex flex-col gap-2 sm:col-span-2">
-          <Checkbox
-            name={name("isAcquisitionCost")}
-            label={t("fields.isAcquisitionCost")}
-            checked={acquisition}
-            onChange={(event) => setAcquisition(event.target.checked)}
-          />
-          <p className="text-xs text-ink-3">
-            {acquisition ? t("fields.isAcquisitionCostHint") : t("fields.oneOffNote")}
-          </p>
-        </div>
-      ) : null}
+          {capitalize ? (
+            <Field
+              label={`${t("fields.amortizationYears")} · ${t("fields.years")}`}
+              name={name("amortizationYears")}
+            >
+              <Input
+                name={name("amortizationYears")}
+                type="number"
+                min={1}
+                max={50}
+                defaultValue={defaults.amortizationYears ?? 10}
+              />
+            </Field>
+          ) : (
+            <input type="hidden" name={name("amortizationYears")} value="" />
+          )}
+        </>
+      )}
     </>
   );
 }

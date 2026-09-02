@@ -81,13 +81,64 @@ describe("propertySchema", () => {
   });
 });
 
+describe("flowLineSchema · nature", () => {
+  const base = {
+    kind: "expense",
+    label: "Assurance incendie",
+    amount: "340",
+    amountMode: "fixed",
+    nature: "recurring",
+    periodicity: "yearly",
+    recurrenceInterval: "1",
+    startDate: "2026-10-01",
+    endDate: "",
+    indexationRate: "2",
+    amortizationYears: "",
+  };
+
+  it("traduit « au départ » en frais ponctuel qui compte dans l'acquisition", () => {
+    const parsed = flowLineSchema.parse({ ...base, nature: "upfront", periodicity: undefined });
+
+    expect(parsed.recurrence).toBe("one_off");
+    expect(parsed.isAcquisitionCost).toBe(true);
+  });
+
+  it("traduit « ponctuel » en frais ponctuel hors acquisition", () => {
+    const parsed = flowLineSchema.parse({ ...base, nature: "one_off", periodicity: undefined });
+
+    expect(parsed.recurrence).toBe("one_off");
+    expect(parsed.isAcquisitionCost).toBe(false);
+  });
+
+  it("traduit « récurrent » en la périodicité choisie", () => {
+    expect(flowLineSchema.parse(base).recurrence).toBe("yearly");
+    expect(flowLineSchema.parse({ ...base, periodicity: "quarterly" }).recurrence).toBe("quarterly");
+    expect(flowLineSchema.parse(base).isAcquisitionCost).toBe(false);
+  });
+
+  it("retombe sur annuel si la périodicité manque", () => {
+    expect(flowLineSchema.parse({ ...base, periodicity: undefined }).recurrence).toBe("yearly");
+  });
+
+  it("ignore l'indexation sur un frais ponctuel, qui n'a pas d'anniversaire", () => {
+    expect(flowLineSchema.parse({ ...base, nature: "upfront" }).indexationRate).toBe(0);
+    expect(flowLineSchema.parse({ ...base, nature: "one_off" }).indexationRate).toBe(0);
+    expect(flowLineSchema.parse(base).indexationRate).toBe(percentToPpm(2));
+  });
+
+  it("refuse une nature inconnue", () => {
+    expect(flowLineSchema.safeParse({ ...base, nature: "autre" }).success).toBe(false);
+  });
+});
+
 describe("flowLineSchema · unité du montant", () => {
   const base = {
     kind: "expense",
     label: "Précompte immobilier",
     amount: "900",
     amountMode: "fixed",
-    recurrence: "yearly",
+    nature: "recurring",
+    periodicity: "yearly",
     recurrenceInterval: "1",
     startDate: "2026-10-01",
     endDate: "",
@@ -111,14 +162,6 @@ describe("flowLineSchema · unité du montant", () => {
 
   it("lit la case étalement cochée", () => {
     expect(flowLineSchema.parse({ ...base, capitalize: "on" }).capitalize).toBe(true);
-  });
-
-  it("traite un coût d'acquisition non coché comme faux", () => {
-    expect(flowLineSchema.parse(base).isAcquisitionCost).toBe(false);
-  });
-
-  it("lit un coût d'acquisition coché", () => {
-    expect(flowLineSchema.parse({ ...base, isAcquisitionCost: "on" }).isAcquisitionCost).toBe(true);
   });
 
   it("laisse amortizationYears à null sans étalement", () => {

@@ -103,6 +103,12 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
     horizonMonths,
     rentAt,
   );
+  const acquisitionExpenses = totalsByMonth(
+    expenseLines.filter((line) => line.isAcquisitionCost && line.recurrence === "one_off"),
+    startMonth,
+    horizonMonths,
+    rentAt,
+  );
   const otherIncome = totalsByMonth(
     input.lines.filter((line) => line.kind === "income"),
     startMonth,
@@ -141,6 +147,7 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
       income,
       expenses: expenses[offset],
       recurringExpenses: recurringExpenses[offset],
+      acquisitionExpenses: acquisitionExpenses[offset],
       loanPayment: loans.payment[offset],
       loanInsurance: loans.insurance[offset],
       loanPenalty: loans.penalty[offset],

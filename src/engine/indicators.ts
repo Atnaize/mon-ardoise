@@ -1,4 +1,4 @@
-import { roundToCents, type Cents } from "./money";
+import { roundToCents } from "./money";
 import { ratioToPpm } from "./rate";
 import { buildSchedule } from "./schedule";
 import type {
@@ -31,14 +31,7 @@ function indexOfMonth(projection: readonly MonthlyProjection[], month: number): 
   return index === -1 ? 0 : index;
 }
 
-function acquisitionCosts(input: ProjectionInput): Cents {
-  return input.lines
-    .filter(
-      (line) =>
-        line.kind === "expense" && line.isAcquisitionCost && line.amountMode === "fixed",
-    )
-    .reduce((total, line) => total + line.amount, 0);
-}
+
 
 export function computeIndicators(
   projection: readonly MonthlyProjection[],
@@ -54,7 +47,6 @@ export function computeIndicators(
 
   const annualRent = sum(rented.map((month) => month.rent));
   const rentedExpenses = sum(rented.map((month) => month.recurringExpenses));
-  const rentedTax = sum(rented.map((month) => month.tax));
 
   // Un rendement se mesure sur une année stabilisée : les frais ponctuels et les
   // remboursements anticipés sont de la trésorerie, pas des charges d'exploitation.
@@ -65,7 +57,12 @@ export function computeIndicators(
     ),
   );
 
-  const acquisitionCost = (input.property.purchasePrice ?? 0) + acquisitionCosts(input);
+  const upfrontCosts = sum(projection.map((month) => month.acquisitionExpenses));
+  const recurringCosts = sum(projection.map((month) => month.recurringExpenses));
+  const totalCosts = sum(projection.map((month) => month.expenses));
+  const rentalPeriodCosts = totalCosts - recurringCosts - upfrontCosts;
+
+  const acquisitionCost = (input.property.purchasePrice ?? 0) + upfrontCosts;
   const financed = input.loans.reduce(
     (total, loan) => total + buildSchedule(loan).financedPrincipal,
     0,
@@ -89,10 +86,18 @@ export function computeIndicators(
     cashInvested,
     grossYieldPpm: hasRent ? ratioToPpm(annualRent, acquisitionCost) : null,
     netYieldPpm: hasRent ? ratioToPpm(annualRent - rentedExpenses, acquisitionCost) : null,
-    netNetYieldPpm: hasRent
-      ? ratioToPpm(annualRent - rentedExpenses - rentedTax, acquisitionCost)
-      : null,
     cashOnCashPpm: hasRent ? ratioToPpm(rentedNet, cashInvested) : null,
+    upfrontCosts,
+    rentalPeriodCosts,
+    recurringCosts,
+    totalCostOfOwnership:
+      (input.property.purchasePrice ?? 0) +
+      totalCosts +
+      sum(
+        projection.map(
+          (month) => month.interest + month.loanInsurance + month.loanPenalty,
+        ),
+      ),
     breakEvenMonth: startedNegative ? (breakEven?.month ?? null) : (projection[0]?.month ?? null),
     worstCumulative: Math.min(0, ...projection.map((month) => month.cumulative)),
     totalInterest: sum(projection.map((month) => month.interest)),
