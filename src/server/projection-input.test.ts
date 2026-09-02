@@ -18,7 +18,6 @@ function bundle(overrides: Partial<PropertyBundle> = {}): PropertyBundle {
       status: "rented",
       acquisitionDate: "2023-08-31",
       purchasePrice: eurosToCents(250_000),
-      cadastralIncome: eurosToCents(1_250),
       currentValue: eurosToCents(320_000),
       valueGrowthRatePpm: percentToPpm(1.5),
       estimatedTaxYearly: eurosToCents(1_800),

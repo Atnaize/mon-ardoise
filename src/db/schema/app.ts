@@ -58,7 +58,6 @@ export const property = pgTable("property", {
   status: propertyStatusEnum("status").notNull().default("preparing"),
   acquisitionDate: date("acquisition_date", { mode: "string" }),
   purchasePrice: integer("purchase_price"),
-  cadastralIncome: integer("cadastral_income"),
   currentValue: integer("current_value"),
   valueGrowthRatePpm: integer("value_growth_rate_ppm").notNull().default(0),
   estimatedTaxYearly: integer("estimated_tax_yearly").notNull().default(0),

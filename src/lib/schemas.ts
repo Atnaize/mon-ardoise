@@ -62,7 +62,6 @@ export const propertySchema = z.object({
   status: z.enum(["preparing", "rented", "occupied"]),
   acquisitionDate: optionalIsoDate,
   purchasePrice: optionalEuros,
-  cadastralIncome: optionalEuros,
   currentValue: optionalEuros,
   valueGrowthRate: percent,
   estimatedTaxYearly: euros,

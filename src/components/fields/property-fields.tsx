@@ -14,7 +14,6 @@ export interface PropertyDefaults {
   status?: string;
   acquisitionDate?: string | null;
   purchasePrice?: number | null;
-  cadastralIncome?: number | null;
   currentValue?: number | null;
   valueGrowthRatePpm?: number;
   estimatedTaxYearly?: number;
@@ -118,20 +117,6 @@ export function PropertyFields({
           name={name("valueGrowthRate")}
           inputMode="decimal"
           defaultValue={percentField(defaults.valueGrowthRatePpm ?? 0)}
-        />
-      </Field>
-
-      <Field
-        label={`${t("fields.cadastralIncome")} · €`}
-        name={name("cadastralIncome")}
-        hint={t("fields.cadastralIncomeHint")}
-        error={error("cadastralIncome")}
-      >
-        <Input
-          name={name("cadastralIncome")}
-          inputMode="decimal"
-          placeholder="1250"
-          defaultValue={moneyField(defaults.cadastralIncome)}
         />
       </Field>
 

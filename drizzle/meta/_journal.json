@@ -57,6 +57,13 @@
       "when": 1788362353022,
       "tag": "0007_flow_line_acquisition_cost",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788362981772,
+      "tag": "0008_drop_cadastral_income",
+      "breakpoints": true
     }
   ]
 }

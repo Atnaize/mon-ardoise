@@ -56,7 +56,6 @@ describe("propertySchema", () => {
     status: "rented",
     acquisitionDate: "",
     purchasePrice: "200000",
-    cadastralIncome: "",
     currentValue: "190000",
     valueGrowthRate: "0",
     estimatedTaxYearly: "0",
@@ -69,7 +68,6 @@ describe("propertySchema", () => {
     expect(parsed.name).toBe("Maison");
     expect(parsed.purchasePrice).toBe(eurosToCents(200_000));
     expect(parsed.acquisitionDate).toBeNull();
-    expect(parsed.cadastralIncome).toBeNull();
     expect(parsed.valueGrowthRate).toBe(0);
     expect(parsed.horizonYears).toBe(20);
   });
@@ -176,7 +174,6 @@ describe("loanSchema · conventions belges par défaut", () => {
         status: "rented",
         acquisitionDate: "",
         purchasePrice: "200000",
-        cadastralIncome: "",
         currentValue: "190000",
         valueGrowthRate: "0",
         estimatedTaxYearly: "0",
