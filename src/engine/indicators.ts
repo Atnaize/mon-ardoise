@@ -1,20 +1,44 @@
 import { roundToCents, type Cents } from "./money";
 import { ratioToPpm } from "./rate";
 import { buildSchedule } from "./schedule";
-import type { Indicators, MonthlyProjection, ProjectionInput } from "./types";
+import type {
+  IndicatorOptions,
+  Indicators,
+  MonthlyProjection,
+  ProjectionInput,
+} from "./types";
+
+const WINDOW = 12;
 
 const sum = (values: readonly number[]): number => values.reduce((a, b) => a + b, 0);
 
-function upfrontCosts(input: ProjectionInput): Cents {
-  const firstYearEnd = input.startMonth + 11;
+function windowFrom(
+  projection: readonly MonthlyProjection[],
+  startIndex: number,
+): MonthlyProjection[] {
+  if (projection.length <= WINDOW) {
+    return [...projection];
+  }
 
+  const clamped = Math.max(0, Math.min(startIndex, projection.length - WINDOW));
+
+  return projection.slice(clamped, clamped + WINDOW);
+}
+
+function indexOfMonth(projection: readonly MonthlyProjection[], month: number): number {
+  const index = projection.findIndex((entry) => entry.month >= month);
+
+  return index === -1 ? 0 : index;
+}
+
+function upfrontCosts(input: ProjectionInput, until: number): Cents {
   return input.lines
     .filter(
       (line) =>
         line.kind === "expense" &&
         line.recurrence === "one_off" &&
         line.amountMode === "fixed" &&
-        line.startMonth <= firstYearEnd,
+        line.startMonth <= until,
     )
     .reduce((total, line) => total + line.amount, 0);
 }
@@ -22,44 +46,57 @@ function upfrontCosts(input: ProjectionInput): Cents {
 export function computeIndicators(
   projection: readonly MonthlyProjection[],
   input: ProjectionInput,
+  options: IndicatorOptions = {},
 ): Indicators {
-  const firstYear = projection.slice(0, 12);
+  const referenceIndex =
+    options.referenceMonth == null ? 0 : indexOfMonth(projection, options.referenceMonth);
+  const reference = windowFrom(projection, referenceIndex);
 
-  const firstYearRent = sum(firstYear.map((m) => m.rent));
-  const firstYearNet = sum(firstYear.map((m) => m.net));
-  const firstYearExpenses = sum(firstYear.map((m) => m.expenses));
-  const firstYearTax = sum(firstYear.map((m) => m.tax));
+  const firstRentIndex = projection.findIndex((entry) => entry.rent > 0);
+  const rented = firstRentIndex === -1 ? [] : windowFrom(projection, firstRentIndex);
 
-  const acquisitionCost = (input.property.purchasePrice ?? 0) + upfrontCosts(input);
+  const annualRent = sum(rented.map((month) => month.rent));
+  const rentedExpenses = sum(rented.map((month) => month.expenses));
+  const rentedTax = sum(rented.map((month) => month.tax));
+  const rentedNet = sum(rented.map((month) => month.net));
+
+  const acquisitionCost =
+    (input.property.purchasePrice ?? 0) + upfrontCosts(input, input.startMonth + WINDOW - 1);
   const financed = input.loans.reduce(
     (total, loan) => total + buildSchedule(loan).financedPrincipal,
     0,
   );
   const cashInvested = Math.max(0, acquisitionCost - financed);
+  const hasRent = annualRent > 0;
 
-  const hasRent = firstYearRent > 0;
-  const breakEven = projection.find((m) => m.cumulative >= 0);
-  const startedNegative = projection[0]?.cumulative < 0;
+  const startedNegative = (projection[0]?.cumulative ?? 0) < 0;
+  const breakEven = projection.find((month) => month.cumulative >= 0);
 
   return {
-    firstYearMonthlyEffort: -roundToCents(sum(firstYear.map((m) => m.share)) / firstYear.length),
-    averageMonthlyNet: roundToCents(sum(projection.map((m) => m.net)) / Math.max(1, projection.length)),
-    firstYearNet,
-    firstYearRent,
+    referenceMonth: reference[0]?.month ?? input.startMonth,
+    rentStartMonth: firstRentIndex === -1 ? null : projection[firstRentIndex].month,
+    monthlyEffort: -roundToCents(sum(reference.map((month) => month.share)) / Math.max(1, reference.length)),
+    averageMonthlyNet: roundToCents(
+      sum(projection.map((month) => month.net)) / Math.max(1, projection.length),
+    ),
+    referenceYearNet: sum(reference.map((month) => month.net)),
+    annualRent,
     acquisitionCost,
     cashInvested,
-    grossYieldPpm: hasRent ? ratioToPpm(firstYearRent, acquisitionCost) : null,
-    netYieldPpm: hasRent ? ratioToPpm(firstYearRent - firstYearExpenses, acquisitionCost) : null,
+    grossYieldPpm: hasRent ? ratioToPpm(annualRent, acquisitionCost) : null,
+    netYieldPpm: hasRent ? ratioToPpm(annualRent - rentedExpenses, acquisitionCost) : null,
     netNetYieldPpm: hasRent
-      ? ratioToPpm(firstYearRent - firstYearExpenses - firstYearTax, acquisitionCost)
+      ? ratioToPpm(annualRent - rentedExpenses - rentedTax, acquisitionCost)
       : null,
-    cashOnCashPpm: hasRent ? ratioToPpm(firstYearNet, cashInvested) : null,
+    cashOnCashPpm: hasRent ? ratioToPpm(rentedNet, cashInvested) : null,
     breakEvenMonth: startedNegative ? (breakEven?.month ?? null) : (projection[0]?.month ?? null),
-    worstCumulative: Math.min(0, ...projection.map((m) => m.cumulative)),
-    totalInterest: sum(projection.map((m) => m.interest)),
-    totalInsurance: sum(projection.map((m) => m.loanInsurance)),
-    totalPenalties: sum(projection.map((m) => m.loanPenalty)),
-    totalCreditCost: sum(projection.map((m) => m.interest + m.loanInsurance + m.loanPenalty)),
+    worstCumulative: Math.min(0, ...projection.map((month) => month.cumulative)),
+    totalInterest: sum(projection.map((month) => month.interest)),
+    totalInsurance: sum(projection.map((month) => month.loanInsurance)),
+    totalPenalties: sum(projection.map((month) => month.loanPenalty)),
+    totalCreditCost: sum(
+      projection.map((month) => month.interest + month.loanInsurance + month.loanPenalty),
+    ),
     finalOutstandingBalance: projection.at(-1)?.outstandingBalance ?? 0,
     finalNetWorth: projection.at(-1)?.netWorth ?? 0,
   };

@@ -14,8 +14,11 @@
   --color-accent-soft: var(--accent-soft);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
+  --color-warning: var(--warning);
   --font-display: var(--font-display), "Helvetica Neue", Arial, sans-serif;
   --font-sans: var(--font-sans), system-ui, sans-serif;
+  --radius-ui: var(--ui-radius);
+  --radius-ui-lg: calc(var(--ui-radius) * 2);
 }
 
 :root {
@@ -32,6 +35,8 @@
   --accent-soft: #ece9f4;
   --positive: #2c6e52;
   --negative: #a64236;
+  --warning: #87611d;
+  --ui-radius: 3px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -49,6 +54,7 @@
     --accent-soft: #282540;
     --positive: #74c39a;
     --negative: #e48d7c;
+    --warning: #dcb165;
   }
 }
 

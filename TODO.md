@@ -48,6 +48,15 @@ abandonné avec Eric.
       À modéliser seulement si l'extension du bien B passe par un crédit du même
       type.
 
+## Dette assumée du lot 2
+
+- [ ] **Édition après création** — un bien, un prêt ou un bail ne peuvent
+      aujourd'hui qu'être créés. Seules les lignes de frais s'ajoutent et se
+      suppriment. À faire avant d'encoder les biens réels pour de bon.
+- [ ] **UI des assurances et des remboursements anticipés** — le schéma et le
+      moteur les portent entièrement, il manque les formulaires.
+- [ ] **Suppression d'un bien** — pas d'écran, à faire en base pour l'instant.
+
 ## Backlog
 
 - [ ] **Q15 · Provisions** — gros travaux, vacance locative, impayés, dégâts.

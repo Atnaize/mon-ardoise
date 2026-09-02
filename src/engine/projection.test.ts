@@ -153,7 +153,7 @@ describe("project · bien occupé sans loyer", () => {
     expect(indicators.netYieldPpm).toBeNull();
     expect(indicators.netNetYieldPpm).toBeNull();
     expect(indicators.cashOnCashPpm).toBeNull();
-    expect(indicators.firstYearRent).toBe(0);
+    expect(indicators.annualRent).toBe(0);
   });
 });
 
@@ -175,12 +175,62 @@ describe("project · impôt annuel", () => {
   });
 });
 
+describe("computeIndicators · fenêtres de calcul", () => {
+  const ACQUIRED = fromIsoDate("2023-08-01");
+  const RENTED = fromIsoDate("2026-10-01");
+
+  const lateLease: Lease = { ...lease, startMonth: RENTED };
+
+  const late = input({
+    startMonth: ACQUIRED,
+    horizonMonths: 300,
+    loans: [
+      { ...bnpLoan("hypothecaire", 150_000), startMonth: ACQUIRED },
+      { ...bnpLoan("mandat", 27_750), startMonth: ACQUIRED },
+    ],
+    lines: [{ ...yearlyExpense("assurance", 340), startMonth: ACQUIRED }],
+    leases: [lateLease],
+  });
+
+  it("calcule les rendements sur les douze premiers mois loués, pas sur le début de la projection", () => {
+    const { indicators } = runProjection(late);
+
+    expect(indicators.rentStartMonth).toBe(RENTED);
+    expect(indicators.annualRent).toBe(eurosToCents(14_400));
+    expect(indicators.grossYieldPpm).not.toBeNull();
+  });
+
+  it("ne masque les rendements que lorsqu'il n'y a réellement jamais de loyer", () => {
+    const { indicators } = runProjection(input({ leases: [] }));
+
+    expect(indicators.rentStartMonth).toBeNull();
+    expect(indicators.grossYieldPpm).toBeNull();
+  });
+
+  it("mesure l'effort sur les douze mois qui suivent le mois de référence", () => {
+    const beforeRent = runProjection(late, { referenceMonth: fromIsoDate("2024-01-01") });
+    const afterRent = runProjection(late, { referenceMonth: RENTED });
+
+    expect(beforeRent.indicators.referenceMonth).toBe(fromIsoDate("2024-01-01"));
+    expect(afterRent.indicators.referenceMonth).toBe(RENTED);
+    expect(beforeRent.indicators.monthlyEffort).toBeGreaterThan(
+      afterRent.indicators.monthlyEffort,
+    );
+  });
+
+  it("retombe sur le début de la projection sans mois de référence", () => {
+    const { indicators } = runProjection(late);
+
+    expect(indicators.referenceMonth).toBe(ACQUIRED);
+  });
+});
+
 describe("runProjection", () => {
   const { projection, indicators } = runProjection(input());
 
   it("rend la projection et les indicateurs ensemble", () => {
     expect(projection).toHaveLength(240);
-    expect(indicators.firstYearRent).toBe(eurosToCents(14_400));
+    expect(indicators.annualRent).toBe(eurosToCents(14_400));
   });
 
   it("calcule les rendements sur le coût d'acquisition", () => {
@@ -192,12 +242,12 @@ describe("runProjection", () => {
 
   it("calcule l'apport immobilisé et le cash-on-cash", () => {
     expect(indicators.cashInvested).toBe(eurosToCents(72_250));
-    expect(indicators.firstYearNet).toBe(eurosToCents(-797.92));
+    expect(indicators.referenceYearNet).toBe(eurosToCents(-797.92));
     expect(indicators.cashOnCashPpm).toBeLessThan(0);
   });
 
   it("calcule l'effort d'épargne du premier mois moyen", () => {
-    expect(indicators.firstYearMonthlyEffort).toBe(-Math.round(eurosToCents(-797.92) / 12));
+    expect(indicators.monthlyEffort).toBe(-Math.round(eurosToCents(-797.92) / 12));
   });
 
   it("totalise le coût du crédit", () => {

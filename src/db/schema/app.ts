@@ -65,9 +65,7 @@ export const property = pgTable("property", {
   estimatedTaxYearly: integer("estimated_tax_yearly").notNull().default(0),
   defaultInflationRatePpm: integer("default_inflation_rate_ppm").notNull().default(20_000),
   horizonYears: integer("horizon_years").notNull().default(20),
-  createdBy: text("created_by")
-    .notNull()
-    .references(() => user.id),
+  createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -237,9 +235,7 @@ export const actualEntry = pgTable(
     label: text("label").notNull(),
     amount: integer("amount").notNull(),
     flowLineId: uuid("flow_line_id").references(() => flowLine.id, { onDelete: "set null" }),
-    createdBy: text("created_by")
-      .notNull()
-      .references(() => user.id),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [index("actual_entry_property_date_idx").on(t.propertyId, t.date)],

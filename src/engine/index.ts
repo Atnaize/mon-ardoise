@@ -12,10 +12,13 @@ export * from "./types";
 
 import { computeIndicators } from "./indicators";
 import { project } from "./projection";
-import type { ProjectionInput, ProjectionResult } from "./types";
+import type { IndicatorOptions, ProjectionInput, ProjectionResult } from "./types";
 
-export function runProjection(input: ProjectionInput): ProjectionResult {
+export function runProjection(
+  input: ProjectionInput,
+  options: IndicatorOptions = {},
+): ProjectionResult {
   const projection = project(input);
 
-  return { projection, indicators: computeIndicators(projection, input) };
+  return { projection, indicators: computeIndicators(projection, input, options) };
 }

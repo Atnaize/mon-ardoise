@@ -21,8 +21,13 @@ multiples), dépliage des récurrences et de l'indexation, série de loyers,
 projection mensuelle, dix-huit indicateurs, comparaison de scénarios.
 114 tests, dont la calibration sur le tableau BNP réel.
 
-**Lot 2 · Saisie — à faire.** Rien ne lit encore le moteur : il faut l'adaptateur
-qui mappe les lignes de base vers `ProjectionInput`, puis les écrans.
+**Lot 2 · Saisie — livré.** Adaptateur base → `ProjectionInput`, création d'un bien
+avec son prêt et son bail, ajout et suppression des lignes de frais et de revenus,
+écran de synthèse avec les douze indicateurs, timeline mensuelle et vue annuelle.
+
+**Ce qui n'y est pas encore** — modifier un bien, un prêt ou un bail après
+création, l'UI des assurances et des remboursements anticipés (le schéma et le
+moteur les portent déjà), les graphiques du lot 3, les scénarios du lot 4.
 
 ## Démarrer
 
@@ -106,6 +111,36 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 `runProjection(input)` est le seul point d'entrée dont l'UI aura besoin. Le lot 2
 ajoutera un adaptateur base → `ProjectionInput` ; le moteur ne connaîtra jamais le
 schéma.
+
+## La couche UI
+
+Tout ce qui touche à l'apparence est concentré pour pouvoir être jeté :
+
+| Où | Quoi |
+| --- | --- |
+| `src/app/globals.css` | **tous** les tokens — couleurs des deux thèmes, rayon d'angle, familles de police. Aucun hex ailleurs dans le code |
+| `src/components/ui/` | les primitives : `Button` `Card` `Field` `Input` `Select` `Checkbox` `Stat` `Table` `Badge` |
+| `src/components/` | les composants métier, qui ne font que composer les primitives |
+| `src/lib/format.ts` | montants, pourcentages et mois, localisés |
+
+Une page n'écrit jamais une couleur ni un rayon en dur : elle utilise une
+primitive. Changer l'identité visuelle se fait dans `globals.css` et
+`src/components/ui/`, sans toucher à une seule page ni à une ligne de calcul.
+
+## Le chemin des données
+
+```
+base  →  src/server/properties.ts   requêtes filtrées par appartenance
+      →  src/server/projection-input.ts   lignes de base → ProjectionInput
+      →  src/engine/  runProjection()     calcul pur
+      →  page serveur → primitives UI
+```
+
+Aucune fonction de `src/server/properties.ts` n'existe sans un `userId` en
+premier paramètre, et le module n'exporte jamais le handle de base. L'écriture
+passe par `src/server/actions.ts`, qui valide avec les schémas Zod de
+`src/lib/schemas.ts` — les mêmes que le client — puis vérifie le rôle avant
+d'écrire.
 
 ## Stack
 

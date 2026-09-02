@@ -68,7 +68,7 @@ describe("compare", () => {
   });
 
   it("chiffre l'écart sur les indicateurs", () => {
-    expect(result.indicators.firstYearRent).toBe(eurosToCents(1_200));
+    expect(result.indicators.annualRent).toBe(eurosToCents(1_200));
     expect(result.indicators.grossYieldPpm).toBeGreaterThan(0);
   });
 

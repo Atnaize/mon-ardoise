@@ -22,6 +22,13 @@
       "when": 1788357468736,
       "tag": "0002_rate_basis_default",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788359195338,
+      "tag": "0003_created_by_set_null",
+      "breakpoints": true
     }
   ]
 }

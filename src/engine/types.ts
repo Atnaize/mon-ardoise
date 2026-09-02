@@ -133,10 +133,12 @@ export interface MonthlyProjection {
 }
 
 export interface Indicators {
-  firstYearMonthlyEffort: Cents;
+  referenceMonth: YearMonth;
+  rentStartMonth: YearMonth | null;
+  monthlyEffort: Cents;
   averageMonthlyNet: Cents;
-  firstYearNet: Cents;
-  firstYearRent: Cents;
+  referenceYearNet: Cents;
+  annualRent: Cents;
   acquisitionCost: Cents;
   cashInvested: Cents;
   grossYieldPpm: Ppm | null;
@@ -151,6 +153,10 @@ export interface Indicators {
   totalCreditCost: Cents;
   finalOutstandingBalance: Cents;
   finalNetWorth: Cents;
+}
+
+export interface IndicatorOptions {
+  referenceMonth?: YearMonth;
 }
 
 export interface ProjectionResult {

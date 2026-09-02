@@ -257,8 +257,8 @@ chiffres faux.
 | --- | --- | --- |
 | **0 · Fondations** | Repo, Next 16 + TS strict, Tailwind 4, Neon + Drizzle, better-auth Google, next-intl fr/en, manifest PWA, CI bloquante | **Livré** |
 | **1 · Moteur de calcul** | Tableau d'amortissement complet, différé, assurances, remboursements anticipés, récurrences, indexation, projection, indicateurs, comparaison. Aucune interface | **Livré** — 114 tests, calibré sur le tableau BNP |
-| 2 · Saisie | Adaptateur base → `ProjectionInput`, CRUD bien, prêts, lignes, bail. Assistant trois étapes. Synthèse | **Suivant** |
-| 3 · Restitution | Timeline, vue annuelle, graphiques, tous les indicateurs | À faire |
+| 2 · Saisie | Adaptateur base → `ProjectionInput`, création bien + prêt + bail, lignes de frais et revenus, synthèse | **Livré** — édition après création encore à faire |
+| 3 · Restitution | Timeline et vue annuelle **livrées** au lot 2 ; restent les graphiques Recharts | **Suivant** |
 | 4 · Scénarios | Duplication, substitution d'hypothèses, comparaison côte à côte | À faire |
 | 5 · Réel vs prévu | Saisie rapide mobile, rapprochement, écrans d'écart | À faire |
 | 6 · Partage | Invitations, rôles, quote-parts, vue consolidée multi-biens | À faire |
