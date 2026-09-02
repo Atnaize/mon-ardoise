@@ -174,16 +174,15 @@
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",
-    "back": "Retour aux biens"
+    "back": "Retour aux biens",
+    "invalid": "Formulaire incomplet : corrige les champs signalés."
   },
   "rent": {
     "title": "L'ardoise",
     "link": "L'ardoise",
     "intro": "Ce que le locataire a versé, mois par mois, et ce qu'il reste dû.",
     "outstanding": "Ardoise",
-    "outstandingHint": "Dû par le locataire sur les mois échus",
-    "expectedToDate": "Attendu à ce jour",
-    "receivedToDate": "Reçu à ce jour",
+    "outstandingHint": "Attendu moins reçu, sur les mois échus jusqu'à {month} inclus",
     "overdue": "{count, plural, =0 {À jour} one {# mois en retard} other {# mois en retard}}",
     "clear": "À jour",
     "record": "Encoder un versement",
@@ -202,6 +201,11 @@
       "overdue": "Impayé"
     },
     "editPayment": "Modifier ce versement",
-    "deletePayment": "Supprimer ce versement"
+    "deletePayment": "Supprimer ce versement",
+    "expectedDue": "Attendu, mois échus",
+    "expectedDueHint": "Cumul depuis le début du bail. Ce chiffre ne bouge pas quand tu encodes un versement.",
+    "receivedDue": "Reçu, mois échus",
+    "advance": "Payé d'avance",
+    "advanceHint": "Encaissé pour des mois à venir · {total} encaissé au total"
   }
 }

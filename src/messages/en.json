@@ -174,16 +174,15 @@
   "common": {
     "cancel": "Cancel",
     "save": "Save",
-    "back": "Back to properties"
+    "back": "Back to properties",
+    "invalid": "Incomplete form: fix the highlighted fields."
   },
   "rent": {
     "title": "The tab",
     "link": "The tab",
     "intro": "What the tenant has paid, month by month, and what is still owed.",
     "outstanding": "Outstanding",
-    "outstandingHint": "Owed by the tenant on months already due",
-    "expectedToDate": "Expected to date",
-    "receivedToDate": "Received to date",
+    "outstandingHint": "Expected minus received, on months due up to and including {month}",
     "overdue": "{count, plural, =0 {Up to date} one {# month overdue} other {# months overdue}}",
     "clear": "Up to date",
     "record": "Record a payment",
@@ -202,6 +201,11 @@
       "overdue": "Unpaid"
     },
     "editPayment": "Edit this payment",
-    "deletePayment": "Delete this payment"
+    "deletePayment": "Delete this payment",
+    "expectedDue": "Expected, months due",
+    "expectedDueHint": "Running total since the lease started. This figure does not move when you record a payment.",
+    "receivedDue": "Received, months due",
+    "advance": "Paid in advance",
+    "advanceHint": "Received for future months · {total} received in total"
   }
 }

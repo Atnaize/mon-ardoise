@@ -45,6 +45,11 @@ export function InlineForm({
     >
       <input type="hidden" name="locale" value={locale} />
       {children(state.errors)}
+      {state.errors ? (
+        <p role="alert" className="text-xs text-negative sm:col-span-2">
+          {t("invalid")}
+        </p>
+      ) : null}
       <div className="flex items-center gap-3 sm:col-span-2">
         <Button type="submit" size="sm" disabled={pending}>
           {t("save")}

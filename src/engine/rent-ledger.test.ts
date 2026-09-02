@@ -78,8 +78,8 @@ describe("buildRentLedger · ardoise", () => {
       payments: [payment(0, 1_000), payment(1, 400)],
     });
 
-    expect(ledger.expectedToDate).toBe(eurosToCents(6_000));
-    expect(ledger.receivedToDate).toBe(eurosToCents(1_400));
+    expect(ledger.expectedDue).toBe(eurosToCents(6_000));
+    expect(ledger.receivedDue).toBe(eurosToCents(1_400));
     expect(ledger.outstanding).toBe(eurosToCents(4_600));
   });
 
@@ -118,6 +118,47 @@ describe("buildRentLedger · ardoise", () => {
 
     expect(ledger.outstanding).toBe(0);
     expect(ledger.overdueMonths).toEqual([START + 1]);
+  });
+});
+
+describe("buildRentLedger · avance", () => {
+  const ledger = buildRentLedger({
+    rents: rents(12),
+    startMonth: START,
+    currentMonth: NOW,
+    payments: [
+      ...[0, 1, 2, 3, 4, 5].map((offset) => payment(offset, 1_000)),
+      payment(6, 1_000, "avance"),
+    ],
+  });
+
+  it("isole ce qui est payé pour des mois à venir", () => {
+    expect(ledger.advance).toBe(eurosToCents(1_000));
+  });
+
+  it("n'inclut pas l'avance dans le reçu des mois échus", () => {
+    expect(ledger.receivedDue).toBe(eurosToCents(6_000));
+  });
+
+  it("totalise tout ce qui est encaissé", () => {
+    expect(ledger.receivedTotal).toBe(eurosToCents(7_000));
+    expect(ledger.receivedTotal).toBe(ledger.receivedDue + ledger.advance);
+  });
+
+  it("laisse l'ardoise à zéro malgré l'avance", () => {
+    expect(ledger.outstanding).toBe(0);
+  });
+
+  it("reste à zéro d'avance quand rien n'est payé au-delà du mois courant", () => {
+    const plain = buildRentLedger({
+      rents: rents(12),
+      startMonth: START,
+      currentMonth: NOW,
+      payments: [payment(0, 1_000)],
+    });
+
+    expect(plain.advance).toBe(0);
+    expect(plain.receivedTotal).toBe(eurosToCents(1_000));
   });
 });
 

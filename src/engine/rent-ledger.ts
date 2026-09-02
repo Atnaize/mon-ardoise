@@ -21,9 +21,16 @@ export interface RentLedgerRow {
 
 export interface RentLedger {
   rows: RentLedgerRow[];
+  /** Attendu moins reçu sur les mois échus. Négatif si le locataire est en avance. */
   outstanding: Cents;
-  expectedToDate: Cents;
-  receivedToDate: Cents;
+  /** Cumul attendu jusqu'au mois courant inclus. */
+  expectedDue: Cents;
+  /** Cumul reçu affecté à ces mêmes mois échus. */
+  receivedDue: Cents;
+  /** Reçu affecté à des mois postérieurs au mois courant. */
+  advance: Cents;
+  /** Tout ce qui a été encaissé, échéances futures comprises. */
+  receivedTotal: Cents;
   overdueMonths: YearMonth[];
   firstOverdueMonth: YearMonth | null;
 }
@@ -84,8 +91,10 @@ export function buildRentLedger({
     return {
       rows: [],
       outstanding: 0,
-      expectedToDate: 0,
-      receivedToDate: 0,
+      expectedDue: 0,
+      receivedDue: 0,
+      advance: 0,
+      receivedTotal: 0,
       overdueMonths: [],
       firstOverdueMonth: null,
     };
@@ -96,8 +105,9 @@ export function buildRentLedger({
 
   const rows: RentLedgerRow[] = [];
   let outstanding: Cents = 0;
-  let expectedToDate: Cents = 0;
-  let receivedToDate: Cents = 0;
+  let expectedDue: Cents = 0;
+  let receivedDue: Cents = 0;
+  let advance: Cents = 0;
   const overdueMonths: YearMonth[] = [];
 
   for (let month = from; month <= to; month += 1) {
@@ -113,9 +123,11 @@ export function buildRentLedger({
     const balance = expected - received;
 
     if (month <= currentMonth) {
-      expectedToDate += expected;
-      receivedToDate += received;
+      expectedDue += expected;
+      receivedDue += received;
       outstanding += balance;
+    } else {
+      advance += received;
     }
 
     if (status === "overdue" || (status === "partial" && month <= currentMonth)) {
@@ -128,8 +140,10 @@ export function buildRentLedger({
   return {
     rows,
     outstanding,
-    expectedToDate,
-    receivedToDate,
+    expectedDue,
+    receivedDue,
+    advance,
+    receivedTotal: receivedDue + advance,
     overdueMonths,
     firstOverdueMonth: overdueMonths[0] ?? null,
   };

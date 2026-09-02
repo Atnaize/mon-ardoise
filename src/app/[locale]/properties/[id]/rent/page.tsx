@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Stat, StatGrid } from "@/components/ui/stat";
 import { Link } from "@/i18n/navigation";
-import { todayIso } from "@/lib/clock";
-import { money } from "@/lib/format";
+import { currentMonth, todayIso } from "@/lib/clock";
+import { money, monthLabel } from "@/lib/format";
 import { currentUser } from "@/lib/session";
 import { loadRentLedger } from "@/server/properties";
 
@@ -48,19 +48,28 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
         <Stat
           emphasis
           label={t("rent.outstanding")}
-          hint={t("rent.outstandingHint")}
+          hint={t("rent.outstandingHint", { month: monthLabel(currentMonth(), locale) })}
           value={money(ledger.outstanding, locale)}
           tone={ledger.outstanding > 0 ? "negative" : "positive"}
         />
         <Stat
-          label={t("rent.expectedToDate")}
-          value={money(ledger.expectedToDate, locale)}
+          label={t("rent.expectedDue")}
+          hint={t("rent.expectedDueHint")}
+          value={money(ledger.expectedDue, locale)}
         />
         <Stat
-          label={t("rent.receivedToDate")}
-          value={money(ledger.receivedToDate, locale)}
-          tone={ledger.receivedToDate < ledger.expectedToDate ? "negative" : "positive"}
+          label={t("rent.receivedDue")}
+          value={money(ledger.receivedDue, locale)}
+          tone={ledger.receivedDue < ledger.expectedDue ? "negative" : "positive"}
         />
+        {ledger.advance > 0 ? (
+          <Stat
+            label={t("rent.advance")}
+            hint={t("rent.advanceHint", { total: money(ledger.receivedTotal, locale) })}
+            value={money(ledger.advance, locale)}
+            tone="accent"
+          />
+        ) : null}
       </StatGrid>
 
       <p
