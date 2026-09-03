@@ -60,7 +60,6 @@ export const property = pgTable("property", {
   purchasePrice: integer("purchase_price"),
   currentValue: integer("current_value"),
   valueGrowthRatePpm: integer("value_growth_rate_ppm").notNull().default(0),
-  estimatedTaxYearly: integer("estimated_tax_yearly").notNull().default(0),
   defaultInflationRatePpm: integer("default_inflation_rate_ppm").notNull().default(20_000),
   horizonYears: integer("horizon_years").notNull().default(20),
   createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),

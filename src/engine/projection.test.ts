@@ -61,9 +61,6 @@ function input(overrides: Partial<ProjectionInput> = {}): ProjectionInput {
       purchasePrice: eurosToCents(250_000),
       currentValue: eurosToCents(320_000),
       valueGrowthRatePpm: percentToPpm(1.5),
-      estimatedTaxYearly: eurosToCents(1_800),
-      taxMode: "monthly_provision",
-      taxMonth: null,
     },
     loans: [bnpLoan("hypothecaire", 150_000), bnpLoan("mandat", 27_750)],
     lines: [
@@ -99,14 +96,11 @@ describe("project · bien loué avec les deux prêts réels", () => {
     expect(projection[12].expenses).toBe(eurosToCents(1_540));
   });
 
-  it("provisionne l'impôt chaque mois", () => {
-    expect(projection[0].tax).toBe(eurosToCents(150));
-    expect(projection.every((m) => m.tax === eurosToCents(150))).toBe(true);
-  });
-
   it("calcule le net du premier mois et du deuxième", () => {
-    expect(projection[0].net).toBe(eurosToCents(-1_478.16));
-    expect(projection[1].net).toBe(eurosToCents(61.84));
+    // 1 200 de loyer - 1 540 de frais annuels - 988,16 de mensualités
+    expect(projection[0].net).toBe(eurosToCents(-1_328.16));
+    // les mois suivants ne portent plus les frais annuels
+    expect(projection[1].net).toBe(eurosToCents(211.84));
   });
 
   it("indexe le loyer au premier anniversaire", () => {
@@ -153,24 +147,6 @@ describe("project · bien occupé sans loyer", () => {
     expect(indicators.netYieldPpm).toBeNull();
     expect(indicators.cashOnCashPpm).toBeNull();
     expect(indicators.annualRent).toBe(0);
-  });
-});
-
-describe("project · impôt annuel", () => {
-  it("charge l'impôt sur le mois choisi", () => {
-    const projection = project(
-      input({
-        property: {
-          ...input().property,
-          taxMode: "yearly",
-          taxMonth: 11,
-        },
-      }),
-    );
-
-    expect(projection[0].tax).toBe(0);
-    expect(projection[1].tax).toBe(eurosToCents(1_800));
-    expect(projection.filter((m) => m.tax > 0)).toHaveLength(20);
   });
 });
 
@@ -385,12 +361,15 @@ describe("runProjection", () => {
 
   it("calcule l'apport immobilisé et le cash-on-cash", () => {
     expect(indicators.cashInvested).toBe(eurosToCents(72_250));
-    expect(indicators.referenceYearNet).toBe(eurosToCents(-797.92));
-    expect(indicators.cashOnCashPpm).toBeLessThan(0);
+    // douze mois à 211,84 moins les 1 540 de frais annuels
+    expect(indicators.referenceYearNet).toBe(eurosToCents(1_002.08));
+    expect(indicators.cashOnCashPpm).toBeGreaterThan(0);
   });
 
   it("calcule l'effort d'épargne du premier mois moyen", () => {
-    expect(indicators.monthlyEffort).toBe(-Math.round(eurosToCents(-797.92) / 12));
+    // net positif, donc l'effort est négatif : le bien s'autofinance
+    expect(indicators.monthlyEffort).toBe(-Math.round(eurosToCents(1_002.08) / 12));
+    expect(indicators.monthlyEffort).toBeLessThan(0);
   });
 
   it("totalise le coût du crédit", () => {

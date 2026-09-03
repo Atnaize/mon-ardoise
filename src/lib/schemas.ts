@@ -64,7 +64,6 @@ export const propertySchema = z.object({
   purchasePrice: optionalEuros,
   currentValue: optionalEuros,
   valueGrowthRate: percent,
-  estimatedTaxYearly: euros,
   horizonYears: z.coerce.number().int().min(1).max(50),
 });
 

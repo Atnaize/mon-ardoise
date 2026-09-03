@@ -84,7 +84,6 @@ export async function createPropertyAction(
         purchasePrice: input.purchasePrice,
         currentValue: input.currentValue,
         valueGrowthRatePpm: input.valueGrowthRate,
-        estimatedTaxYearly: input.estimatedTaxYearly,
         horizonYears: input.horizonYears,
         createdBy: user.id,
       })
@@ -169,7 +168,6 @@ export async function updatePropertyAction(
       purchasePrice: input.purchasePrice,
       currentValue: input.currentValue,
       valueGrowthRatePpm: input.valueGrowthRate,
-      estimatedTaxYearly: input.estimatedTaxYearly,
       horizonYears: input.horizonYears,
       updatedAt: new Date(),
     })

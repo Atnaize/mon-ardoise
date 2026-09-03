@@ -34,7 +34,6 @@ export async function MonthlyTimeline({
             <Th className="text-right">{t("rent")}</Th>
             <Th className="text-right">{t("expenses")}</Th>
             <Th className="text-right">{t("loan")}</Th>
-            <Th className="text-right">{t("tax")}</Th>
             <Th className="text-right">{t("net")}</Th>
             <Th className="text-right">{t("cumulative")}</Th>
           </tr>
@@ -46,7 +45,6 @@ export async function MonthlyTimeline({
               <Td numeric>{money(row.rent, locale)}</Td>
               <Td numeric>{money(-row.expenses, locale)}</Td>
               <Td numeric>{money(-(row.loanPayment + row.loanInsurance + row.loanPenalty + row.loanPrepayment), locale)}</Td>
-              <Td numeric>{money(-row.tax, locale)}</Td>
               <Td numeric>
                 <Amount cents={row.net} locale={locale} />
               </Td>
@@ -70,16 +68,15 @@ export async function YearlyTimeline({
 }) {
   const t = await getTranslations("summary");
 
-  const years = new Map<number, { rent: number; expenses: number; loan: number; tax: number; net: number; cumulative: number; outstanding: number }>();
+  const years = new Map<number, { rent: number; expenses: number; loan: number; net: number; cumulative: number; outstanding: number }>();
 
   for (const row of projection) {
     const year = yearOf(row.month);
-    const entry = years.get(year) ?? { rent: 0, expenses: 0, loan: 0, tax: 0, net: 0, cumulative: 0, outstanding: 0 };
+    const entry = years.get(year) ?? { rent: 0, expenses: 0, loan: 0, net: 0, cumulative: 0, outstanding: 0 };
 
     entry.rent += row.rent;
     entry.expenses += row.expenses;
     entry.loan += row.loanPayment + row.loanInsurance + row.loanPenalty + row.loanPrepayment;
-    entry.tax += row.tax;
     entry.net += row.net;
     entry.cumulative = row.cumulative;
     entry.outstanding = row.outstandingBalance;
@@ -96,7 +93,6 @@ export async function YearlyTimeline({
             <Th className="text-right">{t("rent")}</Th>
             <Th className="text-right">{t("expenses")}</Th>
             <Th className="text-right">{t("loan")}</Th>
-            <Th className="text-right">{t("tax")}</Th>
             <Th className="text-right">{t("net")}</Th>
             <Th className="text-right">{t("cumulative")}</Th>
             <Th className="text-right">{t("outstanding")}</Th>
@@ -109,7 +105,6 @@ export async function YearlyTimeline({
               <Td numeric>{money(entry.rent, locale)}</Td>
               <Td numeric>{money(-entry.expenses, locale)}</Td>
               <Td numeric>{money(-entry.loan, locale)}</Td>
-              <Td numeric>{money(-entry.tax, locale)}</Td>
               <Td numeric>
                 <Amount cents={entry.net} locale={locale} />
               </Td>

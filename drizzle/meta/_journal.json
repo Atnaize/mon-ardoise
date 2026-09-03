@@ -64,6 +64,13 @@
       "when": 1788362981772,
       "tag": "0008_drop_cadastral_income",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788424093687,
+      "tag": "0009_drop_estimated_tax",
+      "breakpoints": true
     }
   ]
 }

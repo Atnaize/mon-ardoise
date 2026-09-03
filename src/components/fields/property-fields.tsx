@@ -16,7 +16,6 @@ export interface PropertyDefaults {
   purchasePrice?: number | null;
   currentValue?: number | null;
   valueGrowthRatePpm?: number;
-  estimatedTaxYearly?: number;
   horizonYears?: number;
 }
 
@@ -117,19 +116,6 @@ export function PropertyFields({
           name={name("valueGrowthRate")}
           inputMode="decimal"
           defaultValue={percentField(defaults.valueGrowthRatePpm ?? 0)}
-        />
-      </Field>
-
-      <Field
-        label={`${t("fields.estimatedTaxYearly")} · €`}
-        name={name("estimatedTaxYearly")}
-        hint={t("fields.estimatedTaxYearlyHint")}
-        error={error("estimatedTaxYearly")}
-      >
-        <Input
-          name={name("estimatedTaxYearly")}
-          inputMode="decimal"
-          defaultValue={moneyField(defaults.estimatedTaxYearly ?? 0)}
         />
       </Field>
 

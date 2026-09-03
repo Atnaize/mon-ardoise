@@ -11,7 +11,6 @@ export type PrepaymentEffect = "reduce_term" | "reduce_payment";
 export type FlowKind = "expense" | "income";
 export type AmountMode = "fixed" | "percent_of_rent";
 export type Recurrence = "one_off" | "monthly" | "quarterly" | "yearly" | "every_n_years";
-export type TaxMode = "monthly_provision" | "yearly";
 
 export interface RatePeriod {
   startMonth: number;
@@ -97,9 +96,6 @@ export interface PropertyAssumptions {
   purchasePrice?: Cents | null;
   currentValue?: Cents | null;
   valueGrowthRatePpm: Ppm;
-  estimatedTaxYearly: Cents;
-  taxMode: TaxMode;
-  taxMonth?: number | null;
 }
 
 export interface ProjectionInput {
@@ -128,7 +124,6 @@ export interface MonthlyProjection {
   loanPrepayment: Cents;
   interest: Cents;
   principal: Cents;
-  tax: Cents;
   net: Cents;
   cumulative: Cents;
   outstandingBalance: Cents;

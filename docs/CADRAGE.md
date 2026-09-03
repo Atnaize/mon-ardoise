@@ -89,11 +89,18 @@ Le **précompte immobilier va augmenter** sur le bien loué : les réductions li
 à l'habitation propre tombent. C'est une ligne de frais annuelle comme une autre,
 ajustée à la main dès réception de l'avertissement-extrait de rôle.
 
-Périmètre V1 : un seul champ « impôt estimé par an » que tu remplis à la main,
-le calcul `RC × coefficient d'indexation × 1,4 × taux marginal` restant à faire
-de ton côté. Le calculateur assisté et le calcul fiscal complet partent au
-backlog — la fiscalité belge du logement bouge tous les deux ans, et la coder
-aujourd'hui c'est acheter de la maintenance.
+**Révision.** La v1 de ce document prévoyait un champ « impôt estimé » sur le
+bien, plus un calculateur dérivant l'impôt du revenu cadastral et du taux
+marginal. Les trois champs ont été supprimés : le revenu cadastral et le taux
+marginal n'alimentaient aucun calcul, et l'impôt estimé était un second mécanisme
+là où le modèle en avait déjà un.
+
+L'impôt est désormais **une ligne de frais récurrente comme une autre**. Une seule
+mécanique, conforme à la décision « chaque frais est une ligne datée », et un
+chiffre que l'utilisateur voit et corrige au même endroit que son assurance ou son
+précompte. Le calcul fiscal automatique reste au backlog ; la fiscalité belge du
+logement bouge tous les deux ans, et la coder aujourd'hui c'est acheter de la
+maintenance.
 
 Hypothèse enregistrée telle quelle, non vérifiée : le bien étant resté résidence
 principale plus de trois ans, aucune reprise d'avantage à l'enregistrement n'est
@@ -137,7 +144,7 @@ chaîne pour éviter les décalages de fuseau.
 | `loan_rate_period` | une ligne si taux fixe | `start_month`, `annual_rate_ppm`, `rate_basis` (défaut `nominal_12`) |
 | `loan_insurance` | ASRD, incendie, autre | `premium_mode` (dans la mensualité / annuelle / trimestrielle / unique financée) |
 | `loan_prepayment` | remboursement anticipé | `penalty_mode`, `penalty_value` (défaut 3 mois), `effect` |
-| `flow_line` | tout frais, tout revenu | `recurrence`, `indexation_rate_ppm`, `capitalize`, `amortization_years` |
+| `flow_line` | tout frais, tout revenu — y compris l'impôt | `recurrence`, `is_acquisition_cost`, `indexation_rate_ppm`, `capitalize`, `amortization_years` |
 | `lease` | bail 1 an puis 3-6-9 | `monthly_rent` hors charges, `indexation_rate_ppm` |
 | `scenario` | comparaison côte à côte | `is_baseline`, `overrides` (jsonb) |
 | `actual_entry` | le réel constaté | `lease_id` et `due_month` pour pointer un loyer sur son échéance, `flow_line_id` pour le rapprochement des frais |
@@ -161,7 +168,7 @@ expandLines(lines, horizonMonths) → MonthlyAmount[]
    déplie récurrences, indexation annuelle, étalement des frais capitalisés
 
 project({ property, schedules, lines, leases, horizonMonths }) → MonthlyProjection[]
-   par mois : revenus, charges, mensualités, impôt, net, cumul, capital restant dû, valeur
+   par mois : revenus, charges récurrentes, charges d'acquisition, mensualités, net, cumul, capital restant dû, valeur
 
 computeIndicators(projection, property) → Indicators
    rendements, point d'équilibre, coût du crédit, effort mensuel, patrimoine net
@@ -234,11 +241,10 @@ dans une cuisine, pas un tableau de 240 lignes.
 | Indicateur | Définition |
 | --- | --- |
 | **Effort d'épargne mensuel** | Ce que ça sort de ta poche chaque mois, quote-part appliquée. **Le chiffre qui décide**, mis en avant partout. |
-| Cash-flow net mensuel | Loyer − charges − mensualité − impôt provisionné |
+| Cash-flow net mensuel | Loyer − charges − mensualité |
 | Point d'équilibre | Le mois où le cumul repasse positif, et le total à financer avant d'y arriver |
 | Rendement brut | Loyer annuel ÷ prix d'acquisition frais compris |
-| Rendement net | Après charges récurrentes, avant impôt |
-| Rendement net-net | Après impôt estimé. Le seul comparable à un placement |
+| Rendement net | Après charges récurrentes uniquement — un rendement se mesure sur une année stabilisée, donc les frais ponctuels en sont exclus |
 | Cash-on-cash | Cash-flow annuel ÷ apport réellement immobilisé |
 | Coût total du crédit | Intérêts + assurances + indemnités de remploi, sur toute la durée |
 | Capital restant dû | Mois par mois, avec l'effet des remboursements anticipés |

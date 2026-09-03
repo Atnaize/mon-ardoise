@@ -80,6 +80,19 @@ abandonné avec Eric.
 - [ ] **Rappel de retard** — l'ardoise est visible mais passive. Un cron
       quotidien plus un e-mail la rendraient active (voir Q31).
 
+## Simplifications décidées en cours de route
+
+Trois champs du bien ont été supprimés parce qu'ils n'alimentaient aucun calcul
+ou doublonnaient un mécanisme existant : `marginal_tax_rate_ppm`,
+`cadastral_income`, `estimated_tax_yearly`. L'impôt est une ligne de frais
+récurrente. Le rendement net-net a disparu avec eux : il dépendait d'une
+estimation saisie à la main et divisait par un coût d'acquisition qui ignore le
+prêt.
+
+Si le calcul fiscal automatique arrive un jour (Q24), il faudra réintroduire le
+revenu cadastral et le taux marginal, et proposer le résultat comme montant
+d'une ligne de frais — pas comme un champ du bien.
+
 ## Backlog
 
 - [ ] **Q15 · Provisions** — gros travaux, vacance locative, impayés, dégâts.

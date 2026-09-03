@@ -1,5 +1,5 @@
 import { applyShare, roundToCents, type Cents } from "./money";
-import { monthOf, type YearMonth } from "./month";
+import type { YearMonth } from "./month";
 import { ppmToRate } from "./rate";
 import { rentByMonth } from "./rent";
 import { totalsByMonth } from "./recurrence";
@@ -53,31 +53,6 @@ function aggregateLoans(
   return totals;
 }
 
-function taxByMonth(input: ProjectionInput): Cents[] {
-  const { horizonMonths, property, startMonth } = input;
-  const taxes = new Array<Cents>(horizonMonths).fill(0);
-
-  if (property.estimatedTaxYearly === 0) {
-    return taxes;
-  }
-
-  if (property.taxMode === "monthly_provision") {
-    const monthly = roundToCents(property.estimatedTaxYearly / 12);
-
-    return taxes.map(() => monthly);
-  }
-
-  const dueMonth = property.taxMonth ?? 12;
-
-  for (let offset = 0; offset < horizonMonths; offset += 1) {
-    if (monthOf(startMonth + offset) === dueMonth) {
-      taxes[offset] = property.estimatedTaxYearly;
-    }
-  }
-
-  return taxes;
-}
-
 function valueByMonth(input: ProjectionInput): Cents[] {
   const { horizonMonths, property } = input;
   const base = property.currentValue ?? property.purchasePrice ?? 0;
@@ -121,7 +96,6 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
     startMonth,
     horizonMonths,
   );
-  const taxes = taxByMonth(input);
   const values = valueByMonth(input);
 
   const projection: MonthlyProjection[] = [];
@@ -135,8 +109,7 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
       loans.payment[offset] -
       loans.insurance[offset] -
       loans.penalty[offset] -
-      loans.prepayment[offset] -
-      taxes[offset];
+      loans.prepayment[offset];
 
     cumulative += net;
 
@@ -154,7 +127,6 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
       loanPrepayment: loans.prepayment[offset],
       interest: loans.interest[offset],
       principal: loans.principal[offset],
-      tax: taxes[offset],
       net,
       cumulative,
       outstandingBalance: loans.balance[offset],

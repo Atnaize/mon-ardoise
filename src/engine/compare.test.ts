@@ -25,9 +25,6 @@ function scenario(monthlyRent: number, leases = true): ProjectionInput {
       purchasePrice: eurosToCents(250_000),
       currentValue: eurosToCents(250_000),
       valueGrowthRatePpm: 0,
-      estimatedTaxYearly: 0,
-      taxMode: "monthly_provision",
-      taxMonth: null,
     },
     loans: [
       {

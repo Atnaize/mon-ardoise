@@ -20,7 +20,6 @@ function bundle(overrides: Partial<PropertyBundle> = {}): PropertyBundle {
       purchasePrice: eurosToCents(250_000),
       currentValue: eurosToCents(320_000),
       valueGrowthRatePpm: percentToPpm(1.5),
-      estimatedTaxYearly: eurosToCents(1_800),
       defaultInflationRatePpm: percentToPpm(2),
       horizonYears: 20,
       createdBy: "user-1",
@@ -153,10 +152,63 @@ describe("toProjectionInput", () => {
     expect(toProjectionInput(bundle({ member }), start).sharePermille).toBe(500);
   });
 
-  it("provisionne l'impôt mensuellement", () => {
-    const input = toProjectionInput(bundle(), start);
+  it("traduit une ligne de frais récurrente, le chemin que suit désormais l'impôt", () => {
+    const line = {
+      id: "line-1",
+      propertyId: "prop-1",
+      scenarioId: null,
+      kind: "expense" as const,
+      label: "Impôt estimé",
+      amount: eurosToCents(300),
+      amountMode: "fixed" as const,
+      recurrence: "yearly" as const,
+      recurrenceInterval: 1,
+      startDate: "2026-09-02",
+      endDate: null,
+      indexationRatePpm: percentToPpm(2),
+      indexationMonth: null,
+      capitalize: false,
+      amortizationYears: null,
+      isAcquisitionCost: false,
+      createdAt: NOW,
+      updatedAt: NOW,
+    };
 
-    expect(input.property.taxMode).toBe("monthly_provision");
-    expect(input.property.estimatedTaxYearly).toBe(eurosToCents(1_800));
+    const input = toProjectionInput(bundle({ lines: [line] }), start);
+
+    expect(input.lines).toHaveLength(1);
+    expect(input.lines[0].startMonth).toBe(fromIsoDate("2026-09-01"));
+    expect(input.lines[0].recurrence).toBe("yearly");
+    expect(input.lines[0].amount).toBe(eurosToCents(300));
+    expect(input.lines[0].indexationRatePpm).toBe(percentToPpm(2));
+    expect(input.lines[0].isAcquisitionCost).toBe(false);
+  });
+
+  it("marque une ligne de frais au départ comme coût d'acquisition", () => {
+    const line = {
+      id: "line-2",
+      propertyId: "prop-1",
+      scenarioId: null,
+      kind: "expense" as const,
+      label: "Notaire",
+      amount: eurosToCents(25_000),
+      amountMode: "fixed" as const,
+      recurrence: "one_off" as const,
+      recurrenceInterval: 1,
+      startDate: "2026-09-02",
+      endDate: null,
+      indexationRatePpm: 0,
+      indexationMonth: null,
+      capitalize: false,
+      amortizationYears: null,
+      isAcquisitionCost: true,
+      createdAt: NOW,
+      updatedAt: NOW,
+    };
+
+    const input = toProjectionInput(bundle({ lines: [line] }), start);
+
+    expect(input.lines[0].isAcquisitionCost).toBe(true);
+    expect(input.lines[0].recurrence).toBe("one_off");
   });
 });
