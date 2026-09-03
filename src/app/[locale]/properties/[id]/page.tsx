@@ -52,6 +52,10 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
 
   const { bundle, projection, indicators, ledger } = loaded;
   const last = projection.at(-1)!;
+  const lastLoanEnd =
+    projection.reduce((month, row) => (row.loanPayment > 0 ? row.month : month), last.month) + 1;
+  const atReference =
+    projection.find((row) => row.month >= indicators.referenceMonth) ?? projection[0];
   const growthPpm = bundle.property.valueGrowthRatePpm;
   const now = todayIso();
 
@@ -106,9 +110,24 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           />
         ) : null}
         <Stat
-          label={t("summary.cashflow")}
-          value={money(indicators.averageMonthlyNet, locale)}
-          tone={indicators.averageMonthlyNet < 0 ? "negative" : "positive"}
+          label={t("summary.equityBuilt")}
+          hint={t("summary.equityBuiltHint")}
+          value={money(indicators.monthlyEquityBuilt, locale)}
+          tone="positive"
+        />
+        <Stat
+          label={t("summary.netAfterLoans")}
+          hint={
+            indicators.monthlyNetAfterLoans == null
+              ? undefined
+              : t("summary.netAfterLoansHint", { month: monthLabel(lastLoanEnd, locale) })
+          }
+          value={
+            indicators.monthlyNetAfterLoans == null
+              ? t("summary.netAfterLoansNever")
+              : money(indicators.monthlyNetAfterLoans, locale)
+          }
+          tone={(indicators.monthlyNetAfterLoans ?? 0) > 0 ? "positive" : "neutral"}
         />
         <Stat
           label={t("summary.breakEven")}
@@ -142,8 +161,16 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           value={percent(indicators.grossYieldPpm, locale)}
         />
         <Stat label={t("summary.netYield")} value={percent(indicators.netYieldPpm, locale)} />
-        <Stat label={t("summary.cashOnCash")} value={percent(indicators.cashOnCashPpm, locale)} />
-        <Stat label={t("summary.cashInvested")} value={money(indicators.cashInvested, locale)} />
+        <Stat
+          label={t("summary.cashOnCash")}
+          hint={t("summary.cashOnCashHint")}
+          value={percent(indicators.cashOnCashPpm, locale)}
+        />
+        <Stat
+          label={t("summary.cashInvested")}
+          hint={t("summary.cashInvestedHint")}
+          value={money(indicators.cashInvested, locale)}
+        />
         <Stat
           label={t("summary.propertyValue")}
           hint={
@@ -155,6 +182,15 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                 })
           }
           value={money(last.propertyValue, locale)}
+        />
+        <Stat
+          label={t("summary.netWorthNow")}
+          hint={t("summary.netWorthNowHint", {
+            value: money(atReference.propertyValue, locale),
+            debt: money(atReference.outstandingBalance, locale),
+          })}
+          value={money(indicators.netWorthNow, locale)}
+          tone="positive"
         />
         <Stat
           label={t("summary.netWorth")}

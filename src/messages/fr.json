@@ -131,8 +131,7 @@
   "summary": {
     "effort": "Effort mensuel récurrent",
     "effortHint": "Ce que le bien te coûte chaque mois hors frais ponctuels, quote-part appliquée · 12 mois à partir de {month}",
-    "cashflow": "Cash-flow net moyen sur l'horizon",
-    "breakEven": "Point d'équilibre",
+    "breakEven": "Trésorerie repassée positive",
     "breakEvenNever": "Jamais sur l'horizon",
     "worstCumulative": "Trésorerie à financer",
     "grossYield": "Rendement brut",
@@ -180,8 +179,17 @@
     "costTotal": "Coût total sur {years} ans",
     "oneOffAhead": "À sortir en une fois",
     "oneOffAheadHint": "Frais ponctuels des 12 prochains mois — notaire, travaux. Non lissés, parce qu'on ne les paie pas par douzièmes.",
-    "breakEvenHint": "Le mois où la trésorerie cumulée depuis {month} repasse positive",
-    "worstCumulativeHint": "Le creux, atteint en {month}. Ce qui a déjà été payé avant {from} n'est pas compté."
+    "breakEvenHint": "Le mois où le cumul de trésorerie depuis {month} redevient positif. Ce n'est pas le moment où le bien est « remboursé » : chaque mensualité rembourse déjà du capital, donc ton patrimoine, lui, monte depuis le premier jour.",
+    "worstCumulativeHint": "Le creux, atteint en {month} : ton effort mensuel accumulé jusqu'à la fin des prêts. Ce qui a déjà été payé avant {from} n'est pas compté.",
+    "equityBuilt": "Patrimoine constitué chaque mois",
+    "equityBuiltHint": "Le capital remboursé dans ta mensualité. Il sort de ta trésorerie mais entre dans ton patrimoine — ce n'est pas une dépense.",
+    "netAfterLoans": "Net mensuel après les prêts",
+    "netAfterLoansHint": "Ce que le bien rapportera chaque mois une fois les prêts soldés, en {month}",
+    "netAfterLoansNever": "Les prêts courent au-delà de l'horizon",
+    "netWorthNow": "Patrimoine net aujourd'hui",
+    "netWorthNowHint": "Valeur estimée {value} moins capital restant dû {debt}",
+    "cashOnCashHint": "Rendement de l'apport que tu as immobilisé. Négatif si le bien te coûte de la trésorerie — ce qui n'empêche pas ton patrimoine de monter.",
+    "cashInvestedHint": "Coût d'acquisition moins ce qui a été emprunté : l'argent sorti de ta poche."
   },
   "common": {
     "cancel": "Annuler",

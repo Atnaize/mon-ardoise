@@ -139,9 +139,14 @@ export interface Indicators {
   monthlyEffort: Cents;
   /** Frais ponctuels tombant dans la fenêtre de référence, à sortir en une fois. */
   oneOffCostsAhead: Cents;
+  /** Capital remboursé chaque mois : de la trésorerie qui sort, mais du patrimoine qui entre. */
+  monthlyEquityBuilt: Cents;
+  /** Net mensuel une fois tous les prêts soldés. Null s'ils courent au-delà de l'horizon. */
+  monthlyNetAfterLoans: Cents | null;
+  /** Valeur estimée moins capital restant dû, au mois de référence. */
+  netWorthNow: Cents;
   /** Mois où la trésorerie cumulée, comptée à partir du mois de référence, est au plus bas. */
   worstCumulativeMonth: YearMonth | null;
-  averageMonthlyNet: Cents;
   referenceYearNet: Cents;
   annualRent: Cents;
   acquisitionCost: Cents;

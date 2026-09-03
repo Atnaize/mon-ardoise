@@ -131,8 +131,7 @@
   "summary": {
     "effort": "Recurring monthly effort",
     "effortHint": "What the property costs you each month excluding one-off costs, your share applied · 12 months from {month}",
-    "cashflow": "Average net cash flow over the horizon",
-    "breakEven": "Break-even",
+    "breakEven": "Cash turns positive",
     "breakEvenNever": "Never within the horizon",
     "worstCumulative": "Cash to finance",
     "grossYield": "Gross yield",
@@ -180,8 +179,17 @@
     "costTotal": "Total cost over {years} years",
     "oneOffAhead": "To pay in one go",
     "oneOffAheadHint": "One-off costs in the next 12 months — notary, works. Not spread, because you do not pay them in twelfths.",
-    "breakEvenHint": "The month when cumulative cash since {month} turns positive",
-    "worstCumulativeHint": "The trough, reached in {month}. What was already paid before {from} is not counted."
+    "breakEvenHint": "The month when cumulative cash since {month} turns positive again. This is not when the property is « paid off »: every instalment already repays principal, so your net worth has been rising from day one.",
+    "worstCumulativeHint": "The trough, reached in {month}: your monthly effort accumulated until the loans end. What was already paid before {from} is not counted.",
+    "equityBuilt": "Equity built each month",
+    "equityBuiltHint": "The principal repaid inside your instalment. It leaves your cash but enters your net worth — it is not an expense.",
+    "netAfterLoans": "Monthly net after the loans",
+    "netAfterLoansHint": "What the property will bring in each month once the loans are repaid, in {month}",
+    "netAfterLoansNever": "The loans run beyond the horizon",
+    "netWorthNow": "Net worth today",
+    "netWorthNowHint": "Estimated value {value} minus outstanding balance {debt}",
+    "cashOnCashHint": "Return on the cash you tied up. Negative if the property costs you cash — which does not stop your net worth from rising.",
+    "cashInvestedHint": "Acquisition cost minus what was borrowed: the money that left your pocket."
   },
   "common": {
     "cancel": "Cancel",

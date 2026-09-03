@@ -379,7 +379,7 @@ describe("computeIndicators · projection démarrée dans le passé", () => {
     leases: [{ ...lease, startMonth: RENTED, monthlyRent: eurosToCents(850) }],
   });
 
-  const { indicators } = runProjection(scenario, { referenceMonth: RENTED });
+  const { indicators, projection } = runProjection(scenario, { referenceMonth: RENTED });
 
   it("exclut les frais ponctuels de l'effort mensuel", () => {
     // 850 de loyer - 988,16 de mensualités, sans les 20 500 de frais au départ
@@ -407,6 +407,33 @@ describe("computeIndicators · projection démarrée dans le passé", () => {
   it("date le creux de trésorerie", () => {
     expect(indicators.worstCumulativeMonth).not.toBeNull();
     expect(indicators.worstCumulativeMonth!).toBeGreaterThanOrEqual(RENTED);
+  });
+
+  it("compte le capital remboursé comme du patrimoine, pas comme une dépense", () => {
+    const start = projection.findIndex((row) => row.month >= RENTED);
+    const expected = Math.round(
+      projection.slice(start, start + 12).reduce((total, row) => total + row.principal, 0) / 12,
+    );
+
+    expect(indicators.monthlyEquityBuilt).toBe(expected);
+    expect(indicators.monthlyEquityBuilt).toBeGreaterThan(0);
+  });
+
+  it("distingue le patrimoine net d'aujourd'hui de celui de fin d'horizon", () => {
+    expect(indicators.netWorthNow).toBeLessThan(indicators.finalNetWorth);
+    expect(indicators.netWorthNow).toBeGreaterThan(0);
+  });
+
+  it("chiffre le net mensuel une fois les prêts soldés", () => {
+    expect(indicators.monthlyNetAfterLoans).not.toBeNull();
+    expect(indicators.monthlyNetAfterLoans!).toBeGreaterThan(0);
+    expect(indicators.monthlyNetAfterLoans!).toBeGreaterThan(-indicators.monthlyEffort);
+  });
+
+  it("ne promet rien après les prêts s'ils courent au-delà de l'horizon", () => {
+    const short = runProjection({ ...scenario, horizonMonths: 120 }, { referenceMonth: RENTED });
+
+    expect(short.indicators.monthlyNetAfterLoans).toBeNull();
   });
 
   it("mesure le point d'équilibre à partir du mois de référence", () => {
