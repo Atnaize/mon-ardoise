@@ -97,6 +97,14 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           value={money(indicators.monthlyEffort, locale)}
           tone={indicators.monthlyEffort > 0 ? "negative" : "positive"}
         />
+        {indicators.oneOffCostsAhead > 0 ? (
+          <Stat
+            label={t("summary.oneOffAhead")}
+            hint={t("summary.oneOffAheadHint")}
+            value={money(indicators.oneOffCostsAhead, locale)}
+            tone="negative"
+          />
+        ) : null}
         <Stat
           label={t("summary.cashflow")}
           value={money(indicators.averageMonthlyNet, locale)}
@@ -104,6 +112,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
         />
         <Stat
           label={t("summary.breakEven")}
+          hint={t("summary.breakEvenHint", { month: monthLabel(indicators.referenceMonth, locale) })}
           value={
             indicators.breakEvenMonth == null
               ? t("summary.breakEvenNever")
@@ -112,7 +121,15 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
         />
         <Stat
           label={t("summary.worstCumulative")}
-          value={money(indicators.worstCumulative, locale)}
+          hint={
+            indicators.worstCumulativeMonth == null
+              ? undefined
+              : t("summary.worstCumulativeHint", {
+                  month: monthLabel(indicators.worstCumulativeMonth, locale),
+                  from: monthLabel(indicators.referenceMonth, locale),
+                })
+          }
+          value={money(Math.abs(indicators.worstCumulative), locale)}
           tone={indicators.worstCumulative < 0 ? "negative" : "neutral"}
         />
         <Stat
@@ -328,7 +345,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-sm font-bold tracking-tight">{t("summary.timeline")}</h2>
-        <MonthlyTimeline projection={projection} locale={locale} />
+        <MonthlyTimeline projection={projection} locale={locale} from={indicators.referenceMonth} />
       </section>
 
       <section className="flex flex-col gap-3">

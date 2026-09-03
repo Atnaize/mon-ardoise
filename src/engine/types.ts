@@ -135,7 +135,12 @@ export interface MonthlyProjection {
 export interface Indicators {
   referenceMonth: YearMonth;
   rentStartMonth: YearMonth | null;
+  /** Effort récurrent : ce que le bien coûte chaque mois, frais ponctuels exclus. */
   monthlyEffort: Cents;
+  /** Frais ponctuels tombant dans la fenêtre de référence, à sortir en une fois. */
+  oneOffCostsAhead: Cents;
+  /** Mois où la trésorerie cumulée, comptée à partir du mois de référence, est au plus bas. */
+  worstCumulativeMonth: YearMonth | null;
   averageMonthlyNet: Cents;
   referenceYearNet: Cents;
   annualRent: Cents;

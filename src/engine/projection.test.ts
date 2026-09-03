@@ -345,6 +345,78 @@ describe("computeIndicators · détail des coûts", () => {
   });
 });
 
+describe("computeIndicators · projection démarrée dans le passé", () => {
+  const BOUGHT = fromIsoDate("2023-08-01");
+  const RENTED = fromIsoDate("2026-09-01");
+
+  function upfront(id: string, euros: number): FlowLine {
+    return {
+      id,
+      kind: "expense",
+      label: id,
+      amount: eurosToCents(euros),
+      amountMode: "fixed",
+      recurrence: "one_off",
+      recurrenceInterval: 1,
+      startMonth: RENTED,
+      endMonth: null,
+      indexationRatePpm: 0,
+      indexationMonth: null,
+      capitalize: false,
+      amortizationYears: null,
+      isAcquisitionCost: true,
+    };
+  }
+
+  const scenario = input({
+    startMonth: BOUGHT,
+    horizonMonths: 420,
+    loans: [
+      { ...bnpLoan("hypothecaire", 150_000), startMonth: BOUGHT },
+      { ...bnpLoan("mandat", 27_750), startMonth: BOUGHT },
+    ],
+    lines: [upfront("notaire", 20_000), upfront("banque", 500)],
+    leases: [{ ...lease, startMonth: RENTED, monthlyRent: eurosToCents(850) }],
+  });
+
+  const { indicators } = runProjection(scenario, { referenceMonth: RENTED });
+
+  it("exclut les frais ponctuels de l'effort mensuel", () => {
+    // 850 de loyer - 988,16 de mensualités, sans les 20 500 de frais au départ
+    expect(indicators.monthlyEffort).toBe(eurosToCents(138.16));
+  });
+
+  it("reporte les frais ponctuels dans un chiffre séparé", () => {
+    expect(indicators.oneOffCostsAhead).toBe(eurosToCents(20_500));
+  });
+
+  it("applique la quote-part aux deux chiffres", () => {
+    const half = runProjection({ ...scenario, sharePermille: 500 }, { referenceMonth: RENTED });
+
+    expect(half.indicators.oneOffCostsAhead).toBe(eurosToCents(10_250));
+    expect(half.indicators.monthlyEffort).toBe(Math.round(indicators.monthlyEffort / 2));
+  });
+
+  it("ne compte pas dans la trésorerie à financer ce qui a été payé avant le mois de référence", () => {
+    const fromStart = runProjection(scenario);
+
+    expect(fromStart.indicators.worstCumulative).toBeLessThan(indicators.worstCumulative);
+    expect(indicators.worstCumulative).toBeGreaterThan(eurosToCents(-60_000));
+  });
+
+  it("date le creux de trésorerie", () => {
+    expect(indicators.worstCumulativeMonth).not.toBeNull();
+    expect(indicators.worstCumulativeMonth!).toBeGreaterThanOrEqual(RENTED);
+  });
+
+  it("mesure le point d'équilibre à partir du mois de référence", () => {
+    const fromStart = runProjection(scenario);
+
+    expect(indicators.breakEvenMonth).not.toBeNull();
+    expect(indicators.breakEvenMonth!).toBeLessThan(fromStart.indicators.breakEvenMonth!);
+  });
+});
+
 describe("runProjection", () => {
   const { projection, indicators } = runProjection(input());
 

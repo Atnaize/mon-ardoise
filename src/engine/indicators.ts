@@ -1,4 +1,4 @@
-import { roundToCents } from "./money";
+import { applyShare, roundToCents } from "./money";
 import { ratioToPpm } from "./rate";
 import { buildSchedule } from "./schedule";
 import type {
@@ -70,13 +70,36 @@ export function computeIndicators(
   const cashInvested = Math.max(0, acquisitionCost - financed);
   const hasRent = annualRent > 0;
 
-  const startedNegative = (projection[0]?.cumulative ?? 0) < 0;
-  const breakEven = projection.find((month) => month.cumulative >= 0);
+  // Une projection démarre à la plus ancienne entrée datée, souvent dans le passé.
+  // Ce qui est déjà dépensé n'est plus à financer : le cumul se recompte à partir
+  // du mois de référence.
+  const forward = projection.slice(referenceIndex);
+  const base = referenceIndex === 0 ? 0 : (projection[referenceIndex - 1]?.cumulative ?? 0);
+  const rebased = forward.map((month) => ({
+    month: month.month,
+    cumulative: month.cumulative - base,
+  }));
+
+  const lowest = rebased.reduce(
+    (worst, entry) => (entry.cumulative < worst.cumulative ? entry : worst),
+    { month: reference[0]?.month ?? input.startMonth, cumulative: 0 },
+  );
+  const breakEven = rebased.find(
+    (entry) => entry.cumulative >= 0 && entry.month > lowest.month,
+  );
+
+  const permille = input.sharePermille ?? 1000;
+  const windowOneOff = sum(reference.map((month) => month.expenses - month.recurringExpenses));
+  const recurringNet = sum(reference.map((month) => month.net)) + windowOneOff;
 
   return {
     referenceMonth: reference[0]?.month ?? input.startMonth,
     rentStartMonth: firstRentIndex === -1 ? null : projection[firstRentIndex].month,
-    monthlyEffort: -roundToCents(sum(reference.map((month) => month.share)) / Math.max(1, reference.length)),
+    monthlyEffort: -roundToCents(
+      applyShare(recurringNet, permille) / Math.max(1, reference.length),
+    ),
+    oneOffCostsAhead: applyShare(windowOneOff, permille),
+    worstCumulativeMonth: lowest.cumulative < 0 ? lowest.month : null,
     averageMonthlyNet: roundToCents(
       sum(projection.map((month) => month.net)) / Math.max(1, projection.length),
     ),
@@ -98,8 +121,8 @@ export function computeIndicators(
           (month) => month.interest + month.loanInsurance + month.loanPenalty,
         ),
       ),
-    breakEvenMonth: startedNegative ? (breakEven?.month ?? null) : (projection[0]?.month ?? null),
-    worstCumulative: Math.min(0, ...projection.map((month) => month.cumulative)),
+    breakEvenMonth: lowest.cumulative < 0 ? (breakEven?.month ?? null) : (reference[0]?.month ?? null),
+    worstCumulative: lowest.cumulative,
     totalInterest: sum(projection.map((month) => month.interest)),
     totalInsurance: sum(projection.map((month) => month.loanInsurance)),
     totalPenalties: sum(projection.map((month) => month.loanPenalty)),

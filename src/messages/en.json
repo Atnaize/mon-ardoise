@@ -129,9 +129,9 @@
     "endDateIgnored": "No effect on a one-off cost"
   },
   "summary": {
-    "effort": "Monthly savings effort",
-    "effortHint": "What it takes out of your pocket, your share applied · 12 months from {month}",
-    "cashflow": "Average monthly net cash flow",
+    "effort": "Recurring monthly effort",
+    "effortHint": "What the property costs you each month excluding one-off costs, your share applied · 12 months from {month}",
+    "cashflow": "Average net cash flow over the horizon",
     "breakEven": "Break-even",
     "breakEvenNever": "Never within the horizon",
     "worstCumulative": "Cash to finance",
@@ -177,7 +177,11 @@
     "costRental": "One-off costs during the rental",
     "costRecurring": "Recurring costs over {years} years",
     "costCredit": "Credit cost",
-    "costTotal": "Total cost over {years} years"
+    "costTotal": "Total cost over {years} years",
+    "oneOffAhead": "To pay in one go",
+    "oneOffAheadHint": "One-off costs in the next 12 months — notary, works. Not spread, because you do not pay them in twelfths.",
+    "breakEvenHint": "The month when cumulative cash since {month} turns positive",
+    "worstCumulativeHint": "The trough, reached in {month}. What was already paid before {from} is not counted."
   },
   "common": {
     "cancel": "Cancel",

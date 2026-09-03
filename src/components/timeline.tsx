@@ -16,14 +16,20 @@ function Amount({ cents, locale }: { cents: number; locale: string }) {
 export async function MonthlyTimeline({
   projection,
   locale,
+  from,
   months = 12,
 }: {
   projection: MonthlyProjection[];
   locale: string;
+  from: number;
   months?: number;
 }) {
   const t = await getTranslations("summary");
-  const rows = projection.slice(0, months);
+  const start = Math.max(
+    0,
+    projection.findIndex((row) => row.month >= from),
+  );
+  const rows = projection.slice(start, start + months);
 
   return (
     <TableScroll>

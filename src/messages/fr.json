@@ -129,9 +129,9 @@
     "endDateIgnored": "Sans effet sur un frais ponctuel"
   },
   "summary": {
-    "effort": "Effort d'épargne mensuel",
-    "effortHint": "Ce que ça sort de ta poche, quote-part appliquée · 12 mois à partir de {month}",
-    "cashflow": "Cash-flow net mensuel moyen",
+    "effort": "Effort mensuel récurrent",
+    "effortHint": "Ce que le bien te coûte chaque mois hors frais ponctuels, quote-part appliquée · 12 mois à partir de {month}",
+    "cashflow": "Cash-flow net moyen sur l'horizon",
     "breakEven": "Point d'équilibre",
     "breakEvenNever": "Jamais sur l'horizon",
     "worstCumulative": "Trésorerie à financer",
@@ -177,7 +177,11 @@
     "costRental": "Frais ponctuels en cours de location",
     "costRecurring": "Frais récurrents sur {years} ans",
     "costCredit": "Coût du crédit",
-    "costTotal": "Coût total sur {years} ans"
+    "costTotal": "Coût total sur {years} ans",
+    "oneOffAhead": "À sortir en une fois",
+    "oneOffAheadHint": "Frais ponctuels des 12 prochains mois — notaire, travaux. Non lissés, parce qu'on ne les paie pas par douzièmes.",
+    "breakEvenHint": "Le mois où la trésorerie cumulée depuis {month} repasse positive",
+    "worstCumulativeHint": "Le creux, atteint en {month}. Ce qui a déjà été payé avant {from} n'est pas compté."
   },
   "common": {
     "cancel": "Annuler",
