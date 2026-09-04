@@ -45,6 +45,7 @@ interface LateProperty {
 export interface ReminderRun {
   considered: number;
   sent: number;
+  failed: number;
 }
 
 export async function sendRentReminders(now = new Date()): Promise<ReminderRun> {
@@ -61,14 +62,24 @@ export async function sendRentReminders(now = new Date()): Promise<ReminderRun> 
     .innerJoin(userTable, eq(userTable.id, propertyMember.userId));
 
   let sent = 0;
+  let failed = 0;
 
   for (const recipient of recipients) {
-    if (await remind(recipient, now)) {
-      sent += 1;
+    // Un envoi refusé ne fait pas taire les autres. Le cron ne repasse que
+    // demain : une adresse morte ou un domaine mal configuré priverait tout le
+    // monde de son rappel, et la boucle s'arrêterait sur le premier nom de la
+    // liste sans qu'on sache combien la suivaient.
+    try {
+      if (await remind(recipient, now)) {
+        sent += 1;
+      }
+    } catch (error) {
+      failed += 1;
+      console.error(`[reminders] sending to ${recipient.id} failed`, error);
     }
   }
 
-  return { considered: recipients.length, sent };
+  return { considered: recipients.length, sent, failed };
 }
 
 async function remind(recipient: Recipient, now: Date): Promise<boolean> {
@@ -161,9 +172,12 @@ async function reminderEmail(recipient: Recipient, late: LateProperty[]): Promis
 
   return {
     to: recipient.email,
+    // Le sujet porte la sévérité, parce que c'est tout ce qu'on lit sur un écran
+    // verrouillé. Le nombre de mois et pas le montant : un sujet se lit par
+    // dessus l'épaule, une somme due n'a pas à s'afficher là.
     subject:
       late.length === 1
-        ? t("subjectOne", { property: late[0].name })
+        ? t("subjectOne", { property: late[0].name, count: late[0].months.length })
         : t("subjectMany", { count: late.length }),
     text: [
       t("greeting", { name: recipient.name }),

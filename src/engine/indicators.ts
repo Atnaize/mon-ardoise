@@ -49,7 +49,7 @@ export function computeIndicators(
   const upfrontCosts = sum(projection.map((month) => month.acquisitionExpenses));
   const recurringCosts = sum(projection.map((month) => month.recurringExpenses));
   const totalCosts = sum(projection.map((month) => month.expenses));
-  const rentalPeriodCosts = totalCosts - recurringCosts - upfrontCosts;
+  const oneOffCosts = totalCosts - recurringCosts - upfrontCosts;
 
   const acquisitionCost = (input.property.purchasePrice ?? 0) + upfrontCosts;
   const financed = input.loans.reduce(
@@ -107,7 +107,7 @@ export function computeIndicators(
     acquisitionCost,
     cashInvested,
     upfrontCosts,
-    rentalPeriodCosts,
+    oneOffCosts,
     recurringCosts,
     totalCostOfOwnership:
       (input.property.purchasePrice ?? 0) +

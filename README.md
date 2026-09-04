@@ -74,9 +74,11 @@ le même driver des deux côtés, il n'y a rien d'autre à changer.
 | `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
 | `GOOGLE_CLIENT_ID` / `_SECRET` | Google Cloud Console → Credentials → OAuth client ID (Web) |
 
-Trois autres sont facultatives en local, et nécessaires en production pour que
-les rappels de retard partent : `RESEND_API_KEY`, `MAIL_FROM` et `CRON_SECRET`.
-Sans elles, le cron tourne, calcule, et n'envoie rien d'autre qu'une ligne de log.
+Trois autres servent aux rappels de retard : `RESEND_API_KEY`, `MAIL_FROM` et
+`CRON_SECRET`. Elles sont dans `.env.op`, donc `npm run env:pull` les remplit
+comme les autres. Sans elles, le cron tourne, calcule, et n'envoie rien d'autre
+qu'une ligne de log ; avec elles, un appel au cron depuis un poste local envoie
+de vrais e-mails, aux adresses de la base que le profil désigne.
 
 Redirect URI à déclarer côté Google : `http://localhost:3000/api/auth/callback/google`
 en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
@@ -201,6 +203,17 @@ un rappel tient en trois lignes et une URL. Sans `RESEND_API_KEY` ni `MAIL_FROM`
 `sendEmail` ne lève pas, il log et rend `skipped` ; la mémoire de l'envoi n'est
 alors pas écrite, pour que le premier vrai rappel ne soit pas retardé par une
 semaine de messages fantômes.
+
+**Le domaine de `MAIL_FROM` doit être vérifié dans Resend**, DNS compris, sinon
+chaque envoi repart en 403 `The domain is not verified`. Pour un essai sans
+domaine, Resend prête `onboarding@resend.dev`, qui ne livre qu'à l'adresse du
+titulaire du compte.
+
+Un envoi refusé ne fait pas taire les autres : la boucle compte l'échec et
+continue, parce qu'une adresse morte priverait de rappel tout le monde derrière
+elle dans la liste. La route rend alors `{"considered":n,"sent":n,"failed":n}` en
+500, pour que le cron se voie rouge dans le tableau de bord Vercel sans que le
+détail se perde.
 
 ## Déploiement
 

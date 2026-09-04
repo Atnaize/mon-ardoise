@@ -164,7 +164,7 @@ export interface Indicators {
   /** Frais engagés pour acquérir le bien : notaire, enregistrement, agence, mise en location. */
   upfrontCosts: Cents;
   /** Frais ponctuels survenus après la mise en location. */
-  rentalPeriodCosts: Cents;
+  oneOffCosts: Cents;
   /** Cumul des charges récurrentes sur tout l'horizon. */
   recurringCosts: Cents;
   /** Prix d'acquisition, tous frais et coût du crédit compris, sur l'horizon. */

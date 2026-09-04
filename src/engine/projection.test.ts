@@ -267,7 +267,7 @@ describe("computeIndicators · coûts d'acquisition", () => {
     );
 
     expect(indicators.acquisitionCost).toBe(base.acquisitionCost);
-    expect(indicators.rentalPeriodCosts).toBe(eurosToCents(4_000));
+    expect(indicators.oneOffCosts).toBe(eurosToCents(4_000));
   });
 
   it("fait quand même sortir la trésorerie au mois indiqué", () => {
@@ -314,7 +314,7 @@ describe("computeIndicators · détail des coûts", () => {
 
   it("sépare les trois natures de frais", () => {
     expect(indicators.upfrontCosts).toBe(eurosToCents(27_000));
-    expect(indicators.rentalPeriodCosts).toBe(eurosToCents(4_000));
+    expect(indicators.oneOffCosts).toBe(eurosToCents(4_000));
     expect(indicators.recurringCosts).toBe(eurosToCents(340 * 20));
   });
 
@@ -327,7 +327,7 @@ describe("computeIndicators · détail des coûts", () => {
     const parts =
       eurosToCents(250_000) +
       indicators.upfrontCosts +
-      indicators.rentalPeriodCosts +
+      indicators.oneOffCosts +
       indicators.recurringCosts +
       creditCost;
 
@@ -337,7 +337,7 @@ describe("computeIndicators · détail des coûts", () => {
   it("ne compte aucune charge deux fois", () => {
     const allExpenses = projection.reduce((total, month) => total + month.expenses, 0);
 
-    expect(indicators.upfrontCosts + indicators.rentalPeriodCosts + indicators.recurringCosts).toBe(
+    expect(indicators.upfrontCosts + indicators.oneOffCosts + indicators.recurringCosts).toBe(
       allExpenses,
     );
   });
@@ -346,7 +346,7 @@ describe("computeIndicators · détail des coûts", () => {
     const bare = runProjection(input({ lines: [] })).indicators;
 
     expect(bare.upfrontCosts).toBe(0);
-    expect(bare.rentalPeriodCosts).toBe(0);
+    expect(bare.oneOffCosts).toBe(0);
     expect(bare.recurringCosts).toBe(0);
     expect(bare.totalCostOfOwnership).toBe(eurosToCents(250_000) + bare.totalCreditCost);
   });

@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Mon Ardoise",
-    "tagline": "Forecast the costs and income of your rental properties",
+    "tagline": "Forecast the costs and income of your properties",
     "version": "v{version}",
     "credit": "Built by <author>ED Solutions</author>",
     "disclaimer": "Projections rest on the assumptions you enter. They are neither financial advice nor a valuation."
@@ -178,8 +178,8 @@
     "currentValueHint": "What the property is worth today, not what you paid",
     "valueGrowthRateHint": "Leave at 0 to assume no appreciation. This is an assumption, not a fact.",
     "nature": "Nature",
-    "natureUpfront": "Upfront: notary, agency, works to make it rentable",
-    "natureOneOff": "One-off: during the rental",
+    "natureUpfront": "Upfront: notary, agency, works",
+    "natureOneOff": "One-off: after the purchase",
     "natureRecurring": "Recurring",
     "natureUpfrontHint": "Counts towards the acquisition cost, so towards what a sale has to give you back. You will never pay it again, so it is not counted as a charge for the year.",
     "natureOneOffHint": "A replaced boiler, a repair. It leaves your cash in the month given and weighs on your monthly effort, but does not repeat.",
@@ -224,7 +224,7 @@
     "costPurchase": "Purchase price",
     "costUpfront": "Upfront costs",
     "costAcquisition": "Acquisition cost",
-    "costRental": "One-off costs during the rental",
+    "costOneOff": "One-off costs after the purchase",
     "costRecurring": "Recurring costs through {year}",
     "costCredit": "Credit cost",
     "costTotal": "Total cost through {year}",
@@ -302,7 +302,7 @@
     "none": "No lease"
   },
   "reminder": {
-    "subjectOne": "Rent overdue on {property}",
+    "subjectOne": "{property}: {count, plural, one {# month of rent overdue} other {# months of rent overdue}}",
     "subjectMany": "Rent overdue on {count} properties",
     "greeting": "Hello {name},",
     "intro": "{count, plural, one {An expected rent has not arrived.} other {Expected rents have not arrived.}}",

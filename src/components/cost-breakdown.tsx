@@ -29,7 +29,7 @@ export async function CostBreakdown({
     { label: t("costPurchase"), value: purchasePrice },
     { label: t("costUpfront"), value: indicators.upfrontCosts },
     { label: t("costAcquisition"), value: indicators.acquisitionCost, total: true },
-    { label: t("costRental"), value: indicators.rentalPeriodCosts },
+    { label: t("costOneOff"), value: indicators.oneOffCosts },
     { label: t("costRecurring", { year: endYear }), value: indicators.recurringCosts },
     { label: t("costCredit"), value: creditCost },
     { label: t("costTotal", { year: endYear }), value: indicators.totalCostOfOwnership, total: true },

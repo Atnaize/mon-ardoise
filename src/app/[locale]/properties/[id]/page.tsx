@@ -110,22 +110,26 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
             value={money(indicators.monthlyEquityBuilt, locale)}
             tone="positive"
           />
-          <Stat
-            label={t("summary.netAfterLoans")}
-            hint={
-              indicators.monthlyNetAfterLoans == null
-                ? undefined
-                : t("summary.netAfterLoansHint", {
-                    month: monthLabel(lastLoanEnd, locale),
-                  })
-            }
-            value={
-              indicators.monthlyNetAfterLoans == null
-                ? t("summary.netAfterLoansNever")
-                : money(indicators.monthlyNetAfterLoans, locale)
-            }
-            tone={(indicators.monthlyNetAfterLoans ?? 0) > 0 ? "positive" : "neutral"}
-          />
+          {/* Sans bail, il n'y a pas de loyer à projeter : la ligne annoncerait
+              0 € à une date lointaine, ce qui n'apprend rien. */}
+          {indicators.rentStartMonth == null ? null : (
+            <Stat
+              label={t("summary.netAfterLoans")}
+              hint={
+                indicators.monthlyNetAfterLoans == null
+                  ? undefined
+                  : t("summary.netAfterLoansHint", {
+                      month: monthLabel(lastLoanEnd, locale),
+                    })
+              }
+              value={
+                indicators.monthlyNetAfterLoans == null
+                  ? t("summary.netAfterLoansNever")
+                  : money(indicators.monthlyNetAfterLoans, locale)
+              }
+              tone={(indicators.monthlyNetAfterLoans ?? 0) > 0 ? "positive" : "neutral"}
+            />
+          )}
           <Stat
             label={t("summary.cashInvested")}
             hint={t("summary.cashInvestedHint")}

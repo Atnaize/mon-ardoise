@@ -21,8 +21,10 @@ export interface Email {
 export type MailResult = "sent" | "skipped";
 
 export async function sendEmail(email: Email): Promise<MailResult> {
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.MAIL_FROM;
+  // Coupés : une clé et une adresse voyagent par un gestionnaire de secrets, où
+  // un espace en trop se glisse sans se voir et fait refuser l'envoi.
+  const key = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.MAIL_FROM?.trim();
 
   if (!key || !from) {
     console.info(`[mail] no transport configured, not sending "${email.subject}" to ${email.to}`);

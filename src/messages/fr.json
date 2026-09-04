@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Mon Ardoise",
-    "tagline": "Prévoir les coûts et les rentrées de vos biens en location",
+    "tagline": "Prévoir les coûts et les rentrées de vos biens immobiliers",
     "version": "v{version}",
     "credit": "Conçu par <author>ED Solutions</author>",
     "disclaimer": "Les projections reposent sur les hypothèses que tu saisis. Elles ne constituent ni un conseil financier ni une estimation de valeur."
@@ -178,8 +178,8 @@
     "currentValueHint": "Ce que le bien vaut aujourd'hui, pas son prix d'achat",
     "valueGrowthRateHint": "Laisse à 0 pour ne supposer aucune plus-value. C'est une hypothèse, pas une donnée.",
     "nature": "Nature",
-    "natureUpfront": "Au départ : notaire, agence, travaux de mise en location",
-    "natureOneOff": "Ponctuel : en cours de location",
+    "natureUpfront": "Au départ : notaire, agence, travaux",
+    "natureOneOff": "Ponctuel : après l'achat",
     "natureRecurring": "Récurrent",
     "natureUpfrontHint": "Entre dans le coût d'acquisition, donc dans ce que la revente doit te rendre. Tu ne le repaieras jamais, il n'est donc pas compté comme charge de l'année.",
     "natureOneOffHint": "Une chaudière remplacée, une réparation. Sort de ta trésorerie au mois indiqué et pèse sur ton effort mensuel, mais ne se répète pas.",
@@ -224,7 +224,7 @@
     "costPurchase": "Prix d'acquisition",
     "costUpfront": "Frais au départ",
     "costAcquisition": "Coût d'acquisition",
-    "costRental": "Frais ponctuels en cours de location",
+    "costOneOff": "Frais ponctuels après l'achat",
     "costRecurring": "Frais récurrents jusqu'en {year}",
     "costCredit": "Coût du crédit",
     "costTotal": "Coût total jusqu'en {year}",
@@ -302,7 +302,7 @@
     "none": "Aucun bail"
   },
   "reminder": {
-    "subjectOne": "Loyer en retard sur {property}",
+    "subjectOne": "{property} : {count} mois de loyer en retard",
     "subjectMany": "Loyers en retard sur {count} biens",
     "greeting": "Bonjour {name},",
     "intro": "{count, plural, one {Un loyer attendu n'est pas arrivé.} other {Des loyers attendus ne sont pas arrivés.}}",
