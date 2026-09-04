@@ -80,7 +80,7 @@ export interface FlowLine {
   indexationMonth?: number | null;
   capitalize: boolean;
   amortizationYears?: number | null;
-  /** Entre dans le coût d'acquisition, dénominateur des rendements, au lieu d'être une charge d'exploitation. */
+  /** Entre dans le coût d'acquisition au lieu d'être une charge d'exploitation. */
   isAcquisitionCost: boolean;
 }
 
@@ -96,6 +96,8 @@ export interface PropertyAssumptions {
   purchasePrice?: Cents | null;
   currentValue?: Cents | null;
   valueGrowthRatePpm: Ppm;
+  /** Mois de l'acquisition : quand l'apport sort et quand le bien devient revendable. */
+  acquisitionMonth?: YearMonth | null;
 }
 
 export interface ProjectionInput {
@@ -114,7 +116,7 @@ export interface MonthlyProjection {
   otherIncome: Cents;
   income: Cents;
   expenses: Cents;
-  /** Part des charges qui se répète : ce qui fait un rendement, par opposition aux frais ponctuels. */
+  /** Part des charges qui se répète, par opposition aux frais ponctuels. */
   recurringExpenses: Cents;
   /** Part des charges qui relève de l'acquisition du bien. */
   acquisitionExpenses: Cents;
@@ -129,6 +131,10 @@ export interface MonthlyProjection {
   outstandingBalance: Cents;
   propertyValue: Cents;
   netWorth: Cents;
+  /** Fonds propres sortis depuis le départ : l'apport, plus la trésorerie que le bien a coûtée. */
+  cashInjected: Cents;
+  /** Ce qui reste en revendant ce mois-là : patrimoine net moins fonds propres sortis. */
+  netPosition: Cents;
   share: Cents;
 }
 
@@ -145,15 +151,16 @@ export interface Indicators {
   monthlyNetAfterLoans: Cents | null;
   /** Valeur estimée moins capital restant dû, au mois de référence. */
   netWorthNow: Cents;
-  /** Mois où la trésorerie cumulée, comptée à partir du mois de référence, est au plus bas. */
-  worstCumulativeMonth: YearMonth | null;
+  /** Fonds propres sortis à ce jour : apport, frais et effort mensuel accumulés. */
+  cashInjectedNow: Cents;
+  /** Ce que la revente laisserait au mois de référence, une fois tout remboursé. */
+  netPositionNow: Cents;
+  /** Mois où la revente rembourserait enfin tout ce qui a été mis. */
+  netPositionBreakEvenMonth: YearMonth | null;
   referenceYearNet: Cents;
   annualRent: Cents;
   acquisitionCost: Cents;
   cashInvested: Cents;
-  grossYieldPpm: Ppm | null;
-  netYieldPpm: Ppm | null;
-  cashOnCashPpm: Ppm | null;
   /** Frais engagés pour acquérir le bien : notaire, enregistrement, agence, mise en location. */
   upfrontCosts: Cents;
   /** Frais ponctuels survenus après la mise en location. */
@@ -162,8 +169,6 @@ export interface Indicators {
   recurringCosts: Cents;
   /** Prix d'acquisition, tous frais et coût du crédit compris, sur l'horizon. */
   totalCostOfOwnership: Cents;
-  breakEvenMonth: YearMonth | null;
-  worstCumulative: Cents;
   totalInterest: Cents;
   totalInsurance: Cents;
   totalPenalties: Cents;

@@ -66,12 +66,12 @@ describe("compare", () => {
 
   it("chiffre l'écart sur les indicateurs", () => {
     expect(result.indicators.annualRent).toBe(eurosToCents(1_200));
-    expect(result.indicators.grossYieldPpm).toBeGreaterThan(0);
+    expect(result.indicators.netPositionNow).toBeGreaterThan(0);
   });
 
   it("rend null quand un indicateur n'existe pas des deux côtés", () => {
     const occupied = runProjection(scenario(950, false));
 
-    expect(compare(occupied, variant).indicators.grossYieldPpm).toBeNull();
+    expect(compare(occupied, variant).indicators.rentStartMonth).toBeNull();
   });
 });

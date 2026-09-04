@@ -101,8 +101,10 @@ describe("earliestMonth", () => {
 describe("toProjectionInput", () => {
   const start = fromIsoDate("2023-10-01");
 
-  it("convertit l'horizon en mois", () => {
-    expect(toProjectionInput(bundle(), start).horizonMonths).toBe(240);
+  it("convertit l'horizon en mois, prolongé jusqu'à la fin de l'année civile", () => {
+    // départ en octobre 2023 : 240 mois s'arrêteraient en septembre 2043
+    expect(toProjectionInput(bundle(), start).horizonMonths).toBe(243);
+    expect(toProjectionInput(bundle(), fromIsoDate("2024-01-01")).horizonMonths).toBe(240);
   });
 
   it("traduit les dates en index de mois", () => {

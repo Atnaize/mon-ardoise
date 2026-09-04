@@ -30,6 +30,17 @@ export function monthsBetween(from: YearMonth, to: YearMonth): number {
   return to - from;
 }
 
+/**
+ * Un horizon en années, prolongé jusqu'à décembre. La première année d'une projection est
+ * partielle par nature — on achète en cours d'année — mais la dernière n'a aucune raison
+ * de l'être : tronquée, elle se lit comme une mauvaise année à côté des précédentes.
+ */
+export function horizonThroughYearEnd(start: YearMonth, years: number): number {
+  const months = years * 12;
+
+  return months + (11 - ((start + months - 1) % 12));
+}
+
 export function toIsoDate(ym: YearMonth, day: number): string {
   const year = yearOf(ym);
   const month = monthOf(ym);

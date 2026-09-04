@@ -7,11 +7,12 @@ import { DeleteForm } from "@/components/forms/delete-form";
 import { FlowLineForm } from "@/components/forms/flow-line-form";
 import { LeaseForm } from "@/components/forms/lease-form";
 import { LoanForm } from "@/components/forms/loan-form";
-import { MonthlyTimeline, YearlyTimeline } from "@/components/timeline";
+import { Timeline } from "@/components/timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Stat, StatGrid } from "@/components/ui/stat";
+import { yearOf } from "@/engine/month";
 import { Link } from "@/i18n/navigation";
 import { money, monthLabel, percent } from "@/lib/format";
 import { natureOf } from "@/lib/nature";
@@ -130,43 +131,6 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           tone={(indicators.monthlyNetAfterLoans ?? 0) > 0 ? "positive" : "neutral"}
         />
         <Stat
-          label={t("summary.breakEven")}
-          hint={t("summary.breakEvenHint", { month: monthLabel(indicators.referenceMonth, locale) })}
-          value={
-            indicators.breakEvenMonth == null
-              ? t("summary.breakEvenNever")
-              : monthLabel(indicators.breakEvenMonth, locale)
-          }
-        />
-        <Stat
-          label={t("summary.worstCumulative")}
-          hint={
-            indicators.worstCumulativeMonth == null
-              ? undefined
-              : t("summary.worstCumulativeHint", {
-                  month: monthLabel(indicators.worstCumulativeMonth, locale),
-                  from: monthLabel(indicators.referenceMonth, locale),
-                })
-          }
-          value={money(Math.abs(indicators.worstCumulative), locale)}
-          tone={indicators.worstCumulative < 0 ? "negative" : "neutral"}
-        />
-        <Stat
-          label={t("summary.grossYield")}
-          hint={
-            indicators.rentStartMonth == null
-              ? undefined
-              : t("summary.yieldHint", { month: monthLabel(indicators.rentStartMonth, locale) })
-          }
-          value={percent(indicators.grossYieldPpm, locale)}
-        />
-        <Stat label={t("summary.netYield")} value={percent(indicators.netYieldPpm, locale)} />
-        <Stat
-          label={t("summary.cashOnCash")}
-          hint={t("summary.cashOnCashHint")}
-          value={percent(indicators.cashOnCashPpm, locale)}
-        />
-        <Stat
           label={t("summary.cashInvested")}
           hint={t("summary.cashInvestedHint")}
           value={money(indicators.cashInvested, locale)}
@@ -178,7 +142,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
               ? t("summary.propertyValueFlat")
               : t("summary.propertyValueGrown", {
                   rate: percent(growthPpm, locale),
-                  years: bundle.property.horizonYears,
+                  year: yearOf(last.month),
                 })
           }
           value={money(last.propertyValue, locale)}
@@ -191,6 +155,26 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           })}
           value={money(indicators.netWorthNow, locale)}
           tone="positive"
+        />
+        <Stat
+          emphasis
+          label={t("summary.netPositionNow")}
+          hint={t("summary.netPositionNowHint", {
+            value: money(atReference.propertyValue, locale),
+            debt: money(atReference.outstandingBalance, locale),
+            injected: money(indicators.cashInjectedNow, locale),
+          })}
+          value={money(indicators.netPositionNow, locale)}
+          tone={indicators.netPositionNow < 0 ? "negative" : "positive"}
+        />
+        <Stat
+          label={t("summary.netPositionBreakEven")}
+          hint={t("summary.netPositionBreakEvenHint")}
+          value={
+            indicators.netPositionBreakEvenMonth == null
+              ? t("summary.netPositionBreakEvenNever")
+              : monthLabel(indicators.netPositionBreakEvenMonth, locale)
+          }
         />
         <Stat
           label={t("summary.netWorth")}
@@ -207,7 +191,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
         indicators={indicators}
         purchasePrice={bundle.property.purchasePrice ?? 0}
         creditCost={indicators.totalCreditCost}
-        horizonYears={bundle.property.horizonYears}
+        endYear={yearOf(last.month)}
         locale={locale}
       />
 
@@ -380,13 +364,17 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
       </Card>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-sm font-bold tracking-tight">{t("summary.timeline")}</h2>
-        <MonthlyTimeline projection={projection} locale={locale} from={indicators.referenceMonth} />
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-sm font-bold tracking-tight">{t("summary.timelineAll")}</h2>
-        <YearlyTimeline projection={projection} locale={locale} />
+        <div className="flex flex-col gap-1">
+          <h2 className="font-display text-sm font-bold tracking-tight">
+            {t("summary.timelineAll")}
+          </h2>
+          <p className="text-xs text-ink-3">{t("summary.timelineAllHint")}</p>
+        </div>
+        <Timeline
+          projection={projection}
+          locale={locale}
+          referenceMonth={indicators.referenceMonth}
+        />
       </section>
     </AppShell>
   );

@@ -29,7 +29,7 @@ for (const [model, def] of Object.entries(expected)) {
   const columns = ours.get(def.modelName);
 
   if (!columns) {
-    problems.push(`table "${def.modelName}" attendue par better-auth pour le modèle "${model}", absente du schéma Drizzle`);
+    problems.push(`table "${def.modelName}" expected by better-auth for model "${model}", missing from the Drizzle schema`);
     continue;
   }
 
@@ -37,25 +37,25 @@ for (const [model, def] of Object.entries(expected)) {
     const column = columns[field];
 
     if (!column) {
-      problems.push(`${def.modelName}.${field} attendu par better-auth, absent du schéma Drizzle`);
+      problems.push(`${def.modelName}.${field} expected by better-auth, missing from the Drizzle schema`);
       continue;
     }
 
     if (attr.required && !column.notNull) {
-      problems.push(`${def.modelName}.${field} est requis par better-auth mais nullable dans le schéma Drizzle`);
+      problems.push(`${def.modelName}.${field} is required by better-auth but nullable in the Drizzle schema`);
     }
   }
 }
 
 if (problems.length > 0) {
-  console.error("Le schéma Drizzle ne satisfait pas better-auth :");
+  console.error("The Drizzle schema does not satisfy better-auth:");
   for (const problem of problems) {
     console.error(`  - ${problem}`);
   }
-  console.error("\nAjoute les champs manquants dans src/db/schema/auth.ts, puis npm run db:generate && npm run db:migrate.");
+  console.error("\nAdd the missing fields in src/db/schema/auth.ts, then npm run db:generate && npm run db:migrate.");
   process.exit(1);
 }
 
 const fieldCount = Object.values(expected).reduce((n, def) => n + Object.keys(def.fields).length, 0);
 
-console.log(`Schéma auth conforme : ${Object.keys(expected).length} modèles, ${fieldCount} champs vérifiés.`);
+console.log(`Auth schema OK: ${Object.keys(expected).length} models, ${fieldCount} fields checked.`);

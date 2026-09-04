@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { addMonths, fromIsoDate, monthOf, monthsBetween, toIsoDate, yearOf } from "./month";
+import {
+  addMonths,
+  fromIsoDate,
+  horizonThroughYearEnd,
+  monthOf,
+  monthsBetween,
+  toIsoDate,
+  yearOf,
+} from "./month";
 
 describe("fromIsoDate", () => {
   it("collapses a date to its month", () => {
@@ -34,6 +42,33 @@ describe("addMonths", () => {
 describe("monthsBetween", () => {
   it("counts a twenty year horizon", () => {
     expect(monthsBetween(fromIsoDate("2026-09-01"), fromIsoDate("2046-09-01"))).toBe(240);
+  });
+});
+
+describe("horizonThroughYearEnd", () => {
+  const lastMonthOf = (start: string, years: number) =>
+    addMonths(fromIsoDate(start), horizonThroughYearEnd(fromIsoDate(start), years) - 1);
+
+  it("prolonge un départ en cours d'année jusqu'à décembre", () => {
+    const last = lastMonthOf("2023-08-01", 30);
+
+    expect(yearOf(last)).toBe(2053);
+    expect(monthOf(last)).toBe(12);
+    // trente ans font 360 mois, plus les cinq qui restent de 2053
+    expect(horizonThroughYearEnd(fromIsoDate("2023-08-01"), 30)).toBe(365);
+  });
+
+  it("ne rallonge rien quand la projection démarre en janvier", () => {
+    expect(horizonThroughYearEnd(fromIsoDate("2026-01-01"), 20)).toBe(240);
+    expect(monthOf(lastMonthOf("2026-01-01", 20))).toBe(12);
+  });
+
+  it("finit toujours en décembre, quel que soit le mois de départ", () => {
+    for (let month = 1; month <= 12; month += 1) {
+      const start = `2024-${String(month).padStart(2, "0")}-01`;
+
+      expect(monthOf(lastMonthOf(start, 20))).toBe(12);
+    }
   });
 });
 

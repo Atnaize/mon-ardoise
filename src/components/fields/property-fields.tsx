@@ -122,6 +122,7 @@ export function PropertyFields({
       <Field
         label={`${t("fields.horizonYears")} · ${t("fields.years")}`}
         name={name("horizonYears")}
+        hint={t("fields.horizonYearsHint")}
       >
         <Input
           name={name("horizonYears")}

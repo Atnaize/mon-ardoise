@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+# .env.op / .env.op.prod ne contiennent que des références 1Password (op://) et
+# des valeurs publiques, jamais de secret : ils sont versionnés exprès.
+!.env.op
+!.env.op.*
 
 # vercel
 .vercel

@@ -10,7 +10,7 @@ import type {
   property,
   propertyMember,
 } from "@/db/schema";
-import { fromIsoDate, type YearMonth } from "@/engine/month";
+import { fromIsoDate, horizonThroughYearEnd, type YearMonth } from "@/engine/month";
 import type { FlowLine, Lease, Loan, ProjectionInput } from "@/engine/types";
 
 type PropertyRow = InferSelectModel<typeof property>;
@@ -124,11 +124,12 @@ export function toProjectionInput(
 
   return {
     startMonth,
-    horizonMonths: bundle.property.horizonYears * 12,
+    horizonMonths: horizonThroughYearEnd(startMonth, bundle.property.horizonYears),
     property: {
       purchasePrice: bundle.property.purchasePrice,
       currentValue: bundle.property.currentValue,
       valueGrowthRatePpm: bundle.property.valueGrowthRatePpm,
+      acquisitionMonth: monthOrNull(bundle.property.acquisitionDate),
     },
     loans: bundle.loans.map(toLoan),
     lines: bundle.lines.map(toFlowLine),

@@ -120,6 +120,16 @@ describe("project · bien loué avec les deux prêts réels", () => {
     expect(projection[239].netWorth).toBeGreaterThan(projection[0].netWorth);
   });
 
+  it("compte l'apport que le prêt n'a pas financé, absent du cumul de trésorerie", () => {
+    // 250 000 de prix pour 177 750 empruntés, plus la première mensualité
+    expect(projection[0].cashInjected).toBe(
+      eurosToCents(72_250) - projection[0].cumulative,
+    );
+    expect(projection[0].netPosition).toBe(
+      projection[0].netWorth - projection[0].cashInjected,
+    );
+  });
+
   it("applique la quote-part au seul champ share", () => {
     const half = project(input({ sharePermille: 500 }));
 
@@ -140,12 +150,10 @@ describe("project · bien occupé sans loyer", () => {
     expect(projection.every((m) => m.net < 0)).toBe(true);
   });
 
-  it("masque les rendements au lieu d'afficher zéro", () => {
+  it("ne date aucune mise en location et ne compte aucun loyer", () => {
     const indicators = computeIndicators(projection, occupied);
 
-    expect(indicators.grossYieldPpm).toBeNull();
-    expect(indicators.netYieldPpm).toBeNull();
-    expect(indicators.cashOnCashPpm).toBeNull();
+    expect(indicators.rentStartMonth).toBeNull();
     expect(indicators.annualRent).toBe(0);
   });
 });
@@ -167,19 +175,18 @@ describe("computeIndicators · fenêtres de calcul", () => {
     leases: [lateLease],
   });
 
-  it("calcule les rendements sur les douze premiers mois loués, pas sur le début de la projection", () => {
+  it("compte le loyer annuel sur les douze premiers mois loués, pas sur le début de la projection", () => {
     const { indicators } = runProjection(late);
 
     expect(indicators.rentStartMonth).toBe(RENTED);
     expect(indicators.annualRent).toBe(eurosToCents(14_400));
-    expect(indicators.grossYieldPpm).not.toBeNull();
   });
 
-  it("ne masque les rendements que lorsqu'il n'y a réellement jamais de loyer", () => {
+  it("ne signale l'absence de loyer que lorsqu'il n'y en a réellement jamais", () => {
     const { indicators } = runProjection(input({ leases: [] }));
 
     expect(indicators.rentStartMonth).toBeNull();
-    expect(indicators.grossYieldPpm).toBeNull();
+    expect(indicators.annualRent).toBe(0);
   });
 
   it("mesure l'effort sur les douze mois qui suivent le mois de référence", () => {
@@ -228,14 +235,14 @@ describe("computeIndicators · coûts d'acquisition", () => {
 
   const base = runProjection(input({ lines: recurring })).indicators;
 
-  it("ajoute un frais marqué acquisition au dénominateur", () => {
+  it("ajoute un frais marqué acquisition au coût d'acquisition", () => {
     const { indicators } = runProjection(
       input({ lines: [...recurring, oneOff("notaire", 25_000, 0, true)] }),
     );
 
     expect(base.acquisitionCost).toBe(eurosToCents(250_000));
     expect(indicators.acquisitionCost).toBe(eurosToCents(275_000));
-    expect(indicators.grossYieldPpm!).toBeLessThan(base.grossYieldPpm!);
+    expect(indicators.upfrontCosts).toBe(eurosToCents(25_000));
   });
 
   it("compte ce frais quelle que soit sa date, sans falaise à douze mois", () => {
@@ -245,13 +252,13 @@ describe("computeIndicators · coûts d'acquisition", () => {
     expect(muchLater.indicators.acquisitionCost).toBe(atStart.indicators.acquisitionCost);
   });
 
-  it("ne le compte pas comme charge de l'année, donc ne détruit pas le rendement net", () => {
+  it("ne le compte pas comme charge de l'année, donc n'alourdit pas l'effort mensuel", () => {
     const { indicators } = runProjection(
       input({ lines: [...recurring, oneOff("notaire", 25_000, 0, true)] }),
     );
 
-    expect(indicators.netYieldPpm!).toBeGreaterThan(0);
-    expect(indicators.netYieldPpm!).toBeLessThan(indicators.grossYieldPpm!);
+    expect(indicators.recurringCosts).toBe(base.recurringCosts);
+    expect(indicators.monthlyEffort).toBe(base.monthlyEffort);
   });
 
   it("laisse le coût d'acquisition intact pour un frais ponctuel non marqué", () => {
@@ -260,7 +267,7 @@ describe("computeIndicators · coûts d'acquisition", () => {
     );
 
     expect(indicators.acquisitionCost).toBe(base.acquisitionCost);
-    expect(indicators.netYieldPpm).toBe(base.netYieldPpm);
+    expect(indicators.rentalPeriodCosts).toBe(eurosToCents(4_000));
   });
 
   it("fait quand même sortir la trésorerie au mois indiqué", () => {
@@ -397,18 +404,6 @@ describe("computeIndicators · projection démarrée dans le passé", () => {
     expect(half.indicators.monthlyEffort).toBe(Math.round(indicators.monthlyEffort / 2));
   });
 
-  it("ne compte pas dans la trésorerie à financer ce qui a été payé avant le mois de référence", () => {
-    const fromStart = runProjection(scenario);
-
-    expect(fromStart.indicators.worstCumulative).toBeLessThan(indicators.worstCumulative);
-    expect(indicators.worstCumulative).toBeGreaterThan(eurosToCents(-60_000));
-  });
-
-  it("date le creux de trésorerie", () => {
-    expect(indicators.worstCumulativeMonth).not.toBeNull();
-    expect(indicators.worstCumulativeMonth!).toBeGreaterThanOrEqual(RENTED);
-  });
-
   it("compte le capital remboursé comme du patrimoine, pas comme une dépense", () => {
     const start = projection.findIndex((row) => row.month >= RENTED);
     const expected = Math.round(
@@ -436,11 +431,86 @@ describe("computeIndicators · projection démarrée dans le passé", () => {
     expect(short.indicators.monthlyNetAfterLoans).toBeNull();
   });
 
-  it("mesure le point d'équilibre à partir du mois de référence", () => {
-    const fromStart = runProjection(scenario);
+});
 
-    expect(indicators.breakEvenMonth).not.toBeNull();
-    expect(indicators.breakEvenMonth!).toBeLessThan(fromStart.indicators.breakEvenMonth!);
+describe("computeIndicators · ce que la revente laisserait", () => {
+  const BOUGHT = fromIsoDate("2023-08-01");
+  const RENTED = fromIsoDate("2026-10-01");
+
+  function oneOff(id: string, euros: number, month: number): FlowLine {
+    return {
+      ...yearlyExpense(id, euros),
+      recurrence: "one_off",
+      startMonth: month,
+      isAcquisitionCost: true,
+    };
+  }
+
+  // Le cas qui ne se lit pas dans la trésorerie : acheté au prix du marché, mis en
+  // location trois ans plus tard, mensualité plus lourde que le loyer.
+  const scenario = input({
+    startMonth: BOUGHT,
+    horizonMonths: 360,
+    property: {
+      purchasePrice: eurosToCents(200_000),
+      currentValue: eurosToCents(200_000),
+      valueGrowthRatePpm: 0,
+      acquisitionMonth: BOUGHT,
+    },
+    loans: [{ ...bnpLoan("hypothecaire", 178_000), startMonth: BOUGHT, termMonths: 240 }],
+    lines: [oneOff("notaire", 20_000, BOUGHT), { ...yearlyExpense("entretien", 300), startMonth: RENTED }],
+    leases: [{ ...lease, startMonth: RENTED, monthlyRent: eurosToCents(850), indexationRatePpm: 0 }],
+  });
+
+  const { indicators, projection } = runProjection(scenario, { referenceMonth: RENTED });
+
+  it("déduit du patrimoine tout ce qui est sorti de la poche", () => {
+    const atReference = projection.find((row) => row.month >= RENTED)!;
+
+    expect(indicators.cashInjectedNow).toBe(atReference.cashInjected);
+    expect(indicators.netPositionNow).toBe(atReference.netWorth - atReference.cashInjected);
+    // notaire et intérêts déjà payés ne se récupèrent pas : la revente est encore perdante
+    expect(indicators.netPositionNow).toBeLessThan(0);
+    expect(indicators.netWorthNow).toBeGreaterThan(0);
+  });
+
+  it("sort du rouge bien avant que la trésorerie ne soit remboursée", () => {
+    const cashRecovered = projection.find((row) => row.cumulative >= 0 && row.month > RENTED);
+
+    expect(indicators.netPositionBreakEvenMonth).not.toBeNull();
+    expect(indicators.netPositionBreakEvenMonth!).toBeGreaterThan(RENTED);
+    expect(cashRecovered).toBeDefined();
+    expect(indicators.netPositionBreakEvenMonth!).toBeLessThan(cashRecovered!.month);
+  });
+
+  it("laisse la valeur entière une fois le prêt soldé", () => {
+    const last = projection.at(-1)!;
+
+    expect(last.outstandingBalance).toBe(0);
+    expect(last.netPosition).toBe(last.propertyValue - last.cashInjected);
+    expect(last.netPosition).toBeGreaterThan(0);
+  });
+
+  it("avance plus vite que la trésorerie, du montant du capital remboursé", () => {
+    const start = projection.findIndex((row) => row.month >= RENTED);
+    const [before, after] = [projection[start], projection[start + 1]];
+
+    expect(after.netPosition - before.netPosition).toBe(
+      after.net + after.principal,
+    );
+  });
+
+  it("ne crédite aucun bien avant l'acquisition", () => {
+    const before = fromIsoDate("2022-08-01");
+    const early = project({
+      ...scenario,
+      startMonth: before,
+      lines: [oneOff("notaire", 20_000, before)],
+    });
+
+    expect(early[0].netPosition).toBe(-early[0].cashInjected);
+    expect(early[0].cashInjected).toBe(eurosToCents(20_000));
+    expect(early[12].netPosition).toBeLessThan(early[12].netWorth);
   });
 });
 
@@ -452,17 +522,11 @@ describe("runProjection", () => {
     expect(indicators.annualRent).toBe(eurosToCents(14_400));
   });
 
-  it("calcule les rendements sur le coût d'acquisition", () => {
+  it("calcule le coût d'acquisition et l'apport immobilisé", () => {
     expect(indicators.acquisitionCost).toBe(eurosToCents(250_000));
-    expect(indicators.grossYieldPpm).toBe(percentToPpm(5.76));
-    expect(indicators.netYieldPpm).toBe(percentToPpm(5.144));
-  });
-
-  it("calcule l'apport immobilisé et le cash-on-cash", () => {
     expect(indicators.cashInvested).toBe(eurosToCents(72_250));
     // douze mois à 211,84 moins les 1 540 de frais annuels
     expect(indicators.referenceYearNet).toBe(eurosToCents(1_002.08));
-    expect(indicators.cashOnCashPpm).toBeGreaterThan(0);
   });
 
   it("calcule l'effort d'épargne du premier mois moyen", () => {
@@ -476,8 +540,9 @@ describe("runProjection", () => {
     expect(indicators.totalCreditCost).toBe(indicators.totalInterest);
   });
 
-  it("trouve le mois de bascule", () => {
-    expect(indicators.worstCumulative).toBeLessThan(0);
-    expect(indicators.breakEvenMonth).not.toBeNull();
+  it("ne date aucun retournement quand la revente est gagnante dès le départ", () => {
+    // 320 000 de valeur estimée pour 250 000 payés : la revente couvre tout dès le premier mois
+    expect(indicators.netPositionNow).toBeGreaterThan(0);
+    expect(indicators.netPositionBreakEvenMonth).toBe(projection[0].month);
   });
 });

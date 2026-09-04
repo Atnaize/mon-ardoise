@@ -8,6 +8,7 @@ export interface MonthlyDelta {
   cumulative: Cents;
   outstandingBalance: Cents;
   netWorth: Cents;
+  netPosition: Cents;
 }
 
 export type IndicatorDeltas = {
@@ -41,6 +42,7 @@ export function compare(baseline: ProjectionResult, variant: ProjectionResult): 
       cumulative: other.cumulative - base.cumulative,
       outstandingBalance: other.outstandingBalance - base.outstandingBalance,
       netWorth: other.netWorth - base.netWorth,
+      netPosition: other.netPosition - base.netPosition,
     });
   }
 

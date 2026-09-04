@@ -63,6 +63,33 @@ function valueByMonth(input: ProjectionInput): Cents[] {
   );
 }
 
+interface Acquisition {
+  offset: number;
+  downPayment: Cents;
+}
+
+/**
+ * L'apport sur le prix — ce que les prêts ne financent pas — ne passe par aucune ligne de
+ * frais : sans lui le cumul de trésorerie sous-estime ce qui est sorti de la poche. Il sort
+ * au mois de l'acquisition, pas au premier mois de la projection, qui peut être antérieur.
+ */
+function acquisitionOf(
+  input: ProjectionInput,
+  schedules: readonly Schedule[],
+  horizonMonths: number,
+): Acquisition {
+  const { purchasePrice, acquisitionMonth } = input.property;
+  const financed = schedules.reduce((total, schedule) => total + schedule.financedPrincipal, 0);
+  const starts = input.loans.map((loan) => loan.startMonth);
+  const month =
+    acquisitionMonth ?? (starts.length > 0 ? Math.min(...starts) : input.startMonth);
+
+  return {
+    offset: Math.min(Math.max(month - input.startMonth, 0), horizonMonths - 1),
+    downPayment: purchasePrice == null ? 0 : purchasePrice - financed,
+  };
+}
+
 export function project(input: ProjectionInput): MonthlyProjection[] {
   const { startMonth, horizonMonths } = input;
   const share = input.sharePermille ?? 1000;
@@ -91,12 +118,10 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
     rentAt,
   );
 
-  const loans = aggregateLoans(
-    input.loans.map(buildSchedule),
-    startMonth,
-    horizonMonths,
-  );
+  const schedules = input.loans.map(buildSchedule);
+  const loans = aggregateLoans(schedules, startMonth, horizonMonths);
   const values = valueByMonth(input);
+  const acquisition = acquisitionOf(input, schedules, horizonMonths);
 
   const projection: MonthlyProjection[] = [];
   let cumulative: Cents = 0;
@@ -112,6 +137,11 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
       loans.prepayment[offset];
 
     cumulative += net;
+
+    // Avant l'acquisition il n'y a pas encore de bien à revendre, seulement des frais engagés.
+    const owned = offset >= acquisition.offset;
+    const cashInjected = (owned ? acquisition.downPayment : 0) - cumulative;
+    const netWorth = values[offset] - loans.balance[offset];
 
     projection.push({
       month: startMonth + offset,
@@ -131,7 +161,9 @@ export function project(input: ProjectionInput): MonthlyProjection[] {
       cumulative,
       outstandingBalance: loans.balance[offset],
       propertyValue: values[offset],
-      netWorth: values[offset] - loans.balance[offset],
+      netWorth,
+      cashInjected,
+      netPosition: (owned ? netWorth : 0) - cashInjected,
       share: applyShare(net, share),
     });
   }

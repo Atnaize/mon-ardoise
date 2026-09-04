@@ -10,13 +10,13 @@ export async function CostBreakdown({
   indicators,
   purchasePrice,
   creditCost,
-  horizonYears,
+  endYear,
   locale,
 }: {
   indicators: Indicators;
   purchasePrice: Cents;
   creditCost: Cents;
-  horizonYears: number;
+  endYear: number;
   locale: string;
 }) {
   const t = await getTranslations("summary");
@@ -26,9 +26,9 @@ export async function CostBreakdown({
     { label: t("costUpfront"), value: indicators.upfrontCosts },
     { label: t("costAcquisition"), value: indicators.acquisitionCost, strong: true },
     { label: t("costRental"), value: indicators.rentalPeriodCosts },
-    { label: t("costRecurring", { years: horizonYears }), value: indicators.recurringCosts },
+    { label: t("costRecurring", { year: endYear }), value: indicators.recurringCosts },
     { label: t("costCredit"), value: creditCost },
-    { label: t("costTotal", { years: horizonYears }), value: indicators.totalCostOfOwnership, strong: true },
+    { label: t("costTotal", { year: endYear }), value: indicators.totalCostOfOwnership, strong: true },
   ];
 
   return (
