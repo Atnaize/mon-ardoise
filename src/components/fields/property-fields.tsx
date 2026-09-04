@@ -10,8 +10,6 @@ import { errorFor, prefixed, type FieldErrors } from "./prefix";
 export interface PropertyDefaults {
   name?: string | null;
   type?: string;
-  region?: string;
-  status?: string;
   acquisitionDate?: string | null;
   purchasePrice?: number | null;
   currentValue?: number | null;
@@ -49,22 +47,6 @@ export function PropertyFields({
         <Select name={name("type")} defaultValue={defaults.type ?? "house"}>
           <option value="house">{t("property.type.house")}</option>
           <option value="apartment">{t("property.type.apartment")}</option>
-        </Select>
-      </Field>
-
-      <Field label={t("fields.region")} name={name("region")}>
-        <Select name={name("region")} defaultValue={defaults.region ?? "wallonie"}>
-          <option value="wallonie">{t("property.region.wallonie")}</option>
-          <option value="bruxelles">{t("property.region.bruxelles")}</option>
-          <option value="flandre">{t("property.region.flandre")}</option>
-        </Select>
-      </Field>
-
-      <Field label={t("fields.status")} name={name("status")}>
-        <Select name={name("status")} defaultValue={defaults.status ?? "preparing"}>
-          <option value="preparing">{t("property.status.preparing")}</option>
-          <option value="rented">{t("property.status.rented")}</option>
-          <option value="occupied">{t("property.status.occupied")}</option>
         </Select>
       </Field>
 

@@ -1,12 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 
-import { AppShell, PageTitle } from "@/components/app-shell";
+import { AppShell } from "@/components/app-shell";
+import { PropertyHeader } from "@/components/property-header";
 import { DeleteForm } from "@/components/forms/delete-form";
 import { PropertyEditForm } from "@/components/property-edit-form";
-import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Link } from "@/i18n/navigation";
 import { currentUser } from "@/lib/session";
 import { deletePropertyAction } from "@/server/actions";
 import { loadPropertyBundle } from "@/server/properties";
@@ -30,15 +29,10 @@ export default async function EditPropertyPage({
 
   return (
     <AppShell>
-      <PageTitle
-        title={t("property.editTitle", { name: bundle.property.name })}
-        action={
-          <Link href={`/properties/${id}`}>
-            <Button variant="ghost" size="sm">
-              {t("common.cancel")}
-            </Button>
-          </Link>
-        }
+      <PropertyHeader
+        name={bundle.property.name}
+        propertyId={id}
+        hasLease={bundle.leases.length > 0}
       />
 
       <PropertyEditForm propertyId={id} locale={locale} defaults={bundle.property} />

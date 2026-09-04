@@ -4,7 +4,16 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { db } from "@/db";
-import { actualEntry, flowLine, lease, loan, loanRatePeriod, property, propertyMember } from "@/db/schema";
+import {
+  actualEntry,
+  flowLine,
+  lease,
+  loan,
+  loanRatePeriod,
+  property,
+  propertyMember,
+  user as userTable,
+} from "@/db/schema";
 import { redirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { toIsoDate } from "@/engine/month";
@@ -78,8 +87,6 @@ export async function createPropertyAction(
       .values({
         name: input.name,
         type: input.type,
-        region: input.region,
-        status: input.status,
         acquisitionDate: input.acquisitionDate,
         purchasePrice: input.purchasePrice,
         currentValue: input.currentValue,
@@ -162,8 +169,6 @@ export async function updatePropertyAction(
     .set({
       name: input.name,
       type: input.type,
-      region: input.region,
-      status: input.status,
       acquisitionDate: input.acquisitionDate,
       purchasePrice: input.purchasePrice,
       currentValue: input.currentValue,
@@ -431,4 +436,29 @@ export async function deleteRentPaymentAction(
     .where(and(eq(actualEntry.id, entryId), eq(actualEntry.propertyId, propertyId)));
 
   refresh();
+}
+
+/**
+ * La langue suit l'utilisateur, pas le navigateur : elle est écrite sur son compte
+ * puis relue à l'ouverture, donc le choix tient d'un appareil à l'autre.
+ *
+ * Une seule aller-retour : on écrit, puis on redirige vers la même page dans la
+ * nouvelle langue. Un clic qui navigue et sauve en parallèle perdrait la course.
+ */
+export async function switchLocaleAction(formData: FormData): Promise<void> {
+  const locale = localeFrom(formData);
+  const path = formData.get("path");
+  const target = typeof path === "string" && path.startsWith("/") ? path : "/";
+  const current = await currentUser();
+
+  if (current) {
+    await db
+      .update(userTable)
+      .set({ locale, updatedAt: new Date() })
+      .where(eq(userTable.id, current.id));
+
+    refresh();
+  }
+
+  redirect({ href: target, locale });
 }

@@ -21,6 +21,7 @@ export function LeaseForm({
 }) {
   return (
     <InlineForm
+      variant={leaseId ? "ghost" : "secondary"}
       label={label}
       locale={locale}
       action={saveLeaseAction.bind(null, propertyId, leaseId)}

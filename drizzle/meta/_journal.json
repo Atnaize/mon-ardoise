@@ -71,6 +71,13 @@
       "when": 1788424093687,
       "tag": "0009_drop_estimated_tax",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788528583174,
+      "tag": "0010_drop_property_region_status",
+      "breakpoints": true
     }
   ]
 }

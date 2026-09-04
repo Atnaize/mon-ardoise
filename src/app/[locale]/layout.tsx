@@ -1,6 +1,6 @@
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Bricolage_Grotesque, IBM_Plex_Sans } from "next/font/google";
+import { Source_Serif_4 } from "next/font/google";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -8,17 +8,12 @@ import { routing } from "@/i18n/routing";
 
 import "../globals.css";
 
-const display = Bricolage_Grotesque({
+// Une seule police chargée, pour les titres et les grands chiffres. Le texte courant
+// prend la police système : plus rapide, et c'est ce qui donne l'aspect natif.
+const display = Source_Serif_4({
   subsets: ["latin"],
-  weight: ["500", "700", "800"],
+  weight: ["400", "600"],
   variable: "--font-display",
-  display: "swap",
-});
-
-const sans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-sans",
   display: "swap",
 });
 
@@ -47,7 +42,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} className={`${display.variable} ${sans.variable}`}>
+    <html lang={locale} className={display.variable}>
       <body className="font-sans antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

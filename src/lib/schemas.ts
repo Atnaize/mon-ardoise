@@ -58,8 +58,6 @@ export const checkbox = z
 export const propertySchema = z.object({
   name: z.string().trim().min(1, "Donne un nom au bien").max(120),
   type: z.enum(["house", "apartment"]),
-  region: z.enum(["wallonie", "bruxelles", "flandre"]),
-  status: z.enum(["preparing", "rented", "occupied"]),
   acquisitionDate: optionalIsoDate,
   purchasePrice: optionalEuros,
   currentValue: optionalEuros,

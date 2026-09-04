@@ -21,6 +21,7 @@ export function FlowLineForm({
 }) {
   return (
     <InlineForm
+      variant={lineId ? "ghost" : "secondary"}
       label={label}
       locale={locale}
       action={saveFlowLineAction.bind(null, propertyId, lineId)}

@@ -39,7 +39,7 @@ export async function RentLedgerView({
           <Card className={row.status === "overdue" ? "border-negative" : undefined}>
             <CardBody className="flex flex-col gap-3">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <span className="font-display text-base font-bold tracking-tight text-ink">
+                <span className="font-display text-base font-semibold tracking-tight text-ink">
                   {monthLabel(row.month, locale)}
                 </span>
                 <Badge tone={STATUS_TONE[row.status]}>{t(`status.${row.status}`)}</Badge>

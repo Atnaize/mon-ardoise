@@ -13,7 +13,7 @@ export function money(cents: Cents, locale: string, fractionDigits = 0): string 
 
 export function percent(ppm: Ppm | null, locale: string): string {
   if (ppm == null) {
-    return "—";
+    return "-";
   }
 
   return new Intl.NumberFormat(locale, {
@@ -27,6 +27,15 @@ export function monthLabel(month: YearMonth, locale: string): string {
   const date = new Date(Date.UTC(yearOf(month), monthOf(month) - 1, 1));
 
   return new Intl.DateTimeFormat(locale, { month: "short", year: "numeric", timeZone: "UTC" }).format(
+    date,
+  );
+}
+
+/** Le mois écrit en entier, pour une date posée au milieu d'une phrase. */
+export function monthLabelLong(month: YearMonth, locale: string): string {
+  const date = new Date(Date.UTC(yearOf(month), monthOf(month) - 1, 1));
+
+  return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" }).format(
     date,
   );
 }

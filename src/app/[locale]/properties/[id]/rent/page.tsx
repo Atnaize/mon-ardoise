@@ -1,12 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 
-import { AppShell, PageTitle } from "@/components/app-shell";
+import { AppShell } from "@/components/app-shell";
+import { PropertyHeader } from "@/components/property-header";
 import { RentLedgerView } from "@/components/rent-ledger-view";
-import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Stat, StatGrid } from "@/components/ui/stat";
-import { Link } from "@/i18n/navigation";
 import { currentMonth, todayIso } from "@/lib/clock";
 import { money, monthLabel } from "@/lib/format";
 import { currentUser } from "@/lib/session";
@@ -30,19 +29,26 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
   const { bundle, ledger } = loaded;
   const activeLease = bundle.leases.find((entry) => entry.status !== "ended") ?? bundle.leases[0];
 
+  // Sans bail, quatre montants à zéro et un « à jour » vert affirmeraient qu'un loyer
+  // est encaissé. La page n'a qu'une chose à dire : il manque un bail.
+  if (bundle.leases.length === 0) {
+    return (
+      <AppShell>
+        <PropertyHeader name={bundle.property.name} propertyId={id} hasLease={false} />
+        <p className="text-[13.5px] leading-normal text-ink-2">{t("rent.noLease")}</p>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
-      <PageTitle
-        title={t("rent.title")}
-        intro={`${bundle.property.name} · ${t("rent.intro")}`}
-        action={
-          <Link href={`/properties/${id}`}>
-            <Button variant="ghost" size="sm">
-              {t("common.back")}
-            </Button>
-          </Link>
-        }
+      <PropertyHeader
+        name={bundle.property.name}
+        propertyId={id}
+        hasLease={bundle.leases.length > 0}
       />
+
+      <p className="text-[13.5px] leading-normal text-ink-2">{t("rent.intro")}</p>
 
       <StatGrid>
         <Stat
@@ -67,7 +73,7 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
             label={t("rent.advance")}
             hint={t("rent.advanceHint", { total: money(ledger.receivedTotal, locale) })}
             value={money(ledger.advance, locale)}
-            tone="accent"
+            tone="positive"
           />
         ) : null}
       </StatGrid>
@@ -82,13 +88,7 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
         {t("rent.overdue", { count: ledger.overdueMonths.length })}
       </p>
 
-      {bundle.leases.length === 0 ? (
-        <Card>
-          <CardBody>
-            <p className="text-sm text-ink-3">{t("rent.noLease")}</p>
-          </CardBody>
-        </Card>
-      ) : ledger.rows.length === 0 ? (
+      {ledger.rows.length === 0 ? (
         <Card>
           <CardBody>
             <p className="text-sm text-ink-3">{t("rent.nothingDue")}</p>

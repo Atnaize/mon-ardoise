@@ -24,7 +24,12 @@ export function LoanForm({
   label: string;
 }) {
   return (
-    <InlineForm label={label} locale={locale} action={saveLoanAction.bind(null, propertyId, loanId)}>
+    <InlineForm
+      label={label}
+      locale={locale}
+      variant={loanId ? "ghost" : "secondary"}
+      action={saveLoanAction.bind(null, propertyId, loanId)}
+    >
       {(errors) => (
         <>
           <LoanFields errors={errors} defaults={defaults} today={today} />

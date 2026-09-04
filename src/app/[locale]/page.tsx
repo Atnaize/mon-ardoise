@@ -1,38 +1,32 @@
+import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
 import { AppShell, PageTitle } from "@/components/app-shell";
-import { SignInButton } from "@/components/sign-in-button";
-import { Badge } from "@/components/ui/badge";
+import { Landing } from "@/components/landing";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { money } from "@/lib/format";
 import { currentUser } from "@/lib/session";
 import { listProperties } from "@/server/properties";
-
-const STATUS_TONE = {
-  preparing: "warning",
-  rented: "positive",
-  occupied: "neutral",
-} as const;
 
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   const t = await getTranslations();
   const user = await currentUser();
 
+  // La langue du compte décide de la langue d'entrée : sans ça, elle n'est qu'une
+  // colonne en base. Seule cette page redirige : un lien profond partagé reste dans
+  // la langue de son URL.
+  if (user && hasLocale(routing.locales, user.locale) && user.locale !== locale) {
+    redirect({ href: "/", locale: user.locale });
+  }
+
   if (!user) {
     return (
-      <AppShell>
-        <section className="flex flex-col gap-5 pt-6">
-          <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-balance sm:text-5xl">
-            {t("home.guestTitle")}
-          </h1>
-          <p className="max-w-prose leading-relaxed text-ink-2">{t("home.guestBody")}</p>
-          <div className="pt-2">
-            <SignInButton />
-          </div>
-        </section>
+      <AppShell width="wide">
+        <Landing locale={locale} />
       </AppShell>
     );
   }
@@ -53,7 +47,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       {properties.length === 0 ? (
         <Card>
           <CardBody className="flex flex-col items-start gap-3">
-            <h2 className="font-display text-base font-bold">{t("home.emptyTitle")}</h2>
+            <h2 className="font-display text-base font-semibold">{t("home.emptyTitle")}</h2>
             <p className="max-w-prose text-sm text-ink-2">{t("home.emptyBody")}</p>
             <Link href="/properties/new">
               <Button>{t("property.add")}</Button>
@@ -68,35 +62,38 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                 href={`/properties/${bundle.property.id}`}
                 className="block rounded-ui border border-line-soft bg-surface p-4 transition-colors hover:border-accent"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="font-display text-base font-bold tracking-tight text-ink">
-                    {bundle.property.name}
-                  </span>
-                  <Badge tone={STATUS_TONE[bundle.property.status]}>
-                    {t(`property.status.${bundle.property.status}`)}
-                  </Badge>
-                </div>
+                <span className="font-display text-base font-semibold tracking-tight text-ink">
+                  {bundle.property.name}
+                </span>
                 <dl className="mt-3 flex flex-col gap-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <dt className="text-xs text-ink-3">{t("summary.effort")}</dt>
                     <dd
-                      className={`font-display text-lg font-bold tabular-nums ${
+                      className={`font-display text-lg font-semibold tabular-nums ${
                         indicators.monthlyEffort > 0 ? "text-negative" : "text-positive"
                       }`}
                     >
                       {money(indicators.monthlyEffort, locale)}
                     </dd>
                   </div>
+                  {/* Sans bail, « à jour » se lit comme un loyer encaissé. Rien n'est
+                      attendu : il n'y a ni bonne ni mauvaise nouvelle à annoncer. */}
                   <div className="flex items-baseline justify-between gap-3">
                     <dt className="text-xs text-ink-3">{t("rent.outstanding")}</dt>
                     <dd
                       className={`text-sm tabular-nums ${
-                        outstandingRent > 0 ? "font-medium text-negative" : "text-positive"
+                        bundle.leases.length === 0
+                          ? "text-ink-3"
+                          : outstandingRent > 0
+                            ? "font-medium text-negative"
+                            : "text-positive"
                       }`}
                     >
-                      {outstandingRent > 0
-                        ? `${money(outstandingRent, locale)} · ${t("rent.overdue", { count: overdueCount })}`
-                        : t("rent.clear")}
+                      {bundle.leases.length === 0
+                        ? t("rent.none")
+                        : outstandingRent > 0
+                          ? `${money(outstandingRent, locale)} · ${t("rent.overdue", { count: overdueCount })}`
+                          : t("rent.clear")}
                     </dd>
                   </div>
                 </dl>

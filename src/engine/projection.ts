@@ -69,7 +69,7 @@ interface Acquisition {
 }
 
 /**
- * L'apport sur le prix — ce que les prêts ne financent pas — ne passe par aucune ligne de
+ * L'apport sur le prix (ce que les prêts ne financent pas) ne passe par aucune ligne de
  * frais : sans lui le cumul de trésorerie sous-estime ce qui est sorti de la poche. Il sort
  * au mois de l'acquisition, pas au premier mois de la projection, qui peut être antérieur.
  */

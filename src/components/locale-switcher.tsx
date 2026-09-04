@@ -2,31 +2,41 @@
 
 import { useLocale, useTranslations } from "next-intl";
 
-import { Link, usePathname } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { cn } from "@/lib/cn";
+import { switchLocaleAction } from "@/server/actions";
 
+/**
+ * Un formulaire et non des liens : le choix doit être écrit sur le compte avant la
+ * navigation, sinon les deux se font la course et la préférence se perd une fois
+ * sur deux.
+ */
 export function LocaleSwitcher() {
   const pathname = usePathname();
   const active = useLocale();
   const t = useTranslations("locale");
 
   return (
-    <nav aria-label={t("label")} className="flex items-center gap-1">
+    <form action={switchLocaleAction} aria-label={t("label")} className="flex items-center gap-2">
+      <input type="hidden" name="path" value={pathname} />
       {routing.locales.map((locale) => (
-        <Link
+        <button
           key={locale}
-          href={pathname}
-          locale={locale}
+          type="submit"
+          name="locale"
+          value={locale}
           aria-current={locale === active ? "true" : undefined}
-          className={
+          className={cn(
+            "cursor-pointer text-xs underline-offset-4 transition-colors",
             locale === active
-              ? "rounded-sm bg-surface-2 px-2 py-1 text-xs font-semibold text-ink"
-              : "rounded-sm px-2 py-1 text-xs text-ink-3 transition-colors hover:text-accent"
-          }
+              ? "font-semibold text-ink"
+              : "text-ink-3 hover:text-ink hover:underline",
+          )}
         >
           {locale.toUpperCase()}
-        </Link>
+        </button>
       ))}
-    </nav>
+    </form>
   );
 }

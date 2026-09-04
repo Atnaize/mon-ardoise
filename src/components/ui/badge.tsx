@@ -16,7 +16,9 @@ export function Badge({ children, tone = "neutral" }: { children: ReactNode; ton
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider",
+        // Casse normale : en capitales, quatre pastilles côte à côte criaient plus fort
+        // que le nom du bien juste au-dessus.
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px]",
         TONES[tone],
       )}
     >

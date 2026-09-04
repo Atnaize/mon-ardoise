@@ -1,16 +1,18 @@
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 
-import { AppShell, PageTitle } from "@/components/app-shell";
+import { AppShell } from "@/components/app-shell";
 import { CostBreakdown } from "@/components/cost-breakdown";
 import { DeleteForm } from "@/components/forms/delete-form";
 import { FlowLineForm } from "@/components/forms/flow-line-form";
 import { LeaseForm } from "@/components/forms/lease-form";
 import { LoanForm } from "@/components/forms/loan-form";
-import { Timeline } from "@/components/timeline";
+import { Headline } from "@/components/headline";
+import { NetPositionChart } from "@/components/net-position-chart";
+import { PropertyHeader } from "@/components/property-header";
+import { chartPoints, landmarksOf, Timeline } from "@/components/timeline";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Section, SectionItem, SectionList } from "@/components/ui/section";
 import { Stat, StatGrid } from "@/components/ui/stat";
 import { yearOf } from "@/engine/month";
 import { Link } from "@/i18n/navigation";
@@ -24,8 +26,6 @@ import {
   deleteLoanAction,
 } from "@/server/actions";
 import { loadProjection } from "@/server/properties";
-
-const STATUS_TONE = { preparing: "warning", rented: "positive", occupied: "neutral" } as const;
 
 const PERIODICITY_KEY = {
   monthly: "Monthly",
@@ -53,8 +53,8 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
 
   const { bundle, projection, indicators, ledger } = loaded;
   const last = projection.at(-1)!;
-  const lastLoanEnd =
-    projection.reduce((month, row) => (row.loanPayment > 0 ? row.month : month), last.month) + 1;
+  const landmarks = landmarksOf(projection, indicators.referenceMonth);
+  const lastLoanEnd = (landmarks.lastInstalment ?? last.month) + 1;
   const atReference =
     projection.find((row) => row.month >= indicators.referenceMonth) ?? projection[0];
   const growthPpm = bundle.property.valueGrowthRatePpm;
@@ -62,138 +62,120 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
 
   return (
     <AppShell>
-      <PageTitle
-        title={bundle.property.name}
-        action={
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/properties/${id}/rent`}>
-              <Button size="sm">{t("rent.link")}</Button>
-            </Link>
-            <Link href={`/properties/${id}/edit`}>
-              <Button variant="secondary" size="sm">
-                {t("property.edit")}
-              </Button>
-            </Link>
-            <Link href="/">
-              <Button variant="ghost" size="sm">
-                {t("common.back")}
-              </Button>
-            </Link>
-          </div>
-        }
+      <PropertyHeader
+        name={bundle.property.name}
+        propertyId={id}
+        hasLease={bundle.leases.length > 0}
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={STATUS_TONE[bundle.property.status]}>
-          {t(`property.status.${bundle.property.status}`)}
-        </Badge>
         <Badge>{t(`property.type.${bundle.property.type}`)}</Badge>
-        <Badge>{t(`property.region.${bundle.property.region}`)}</Badge>
         <Badge>
           {bundle.property.horizonYears} {t("fields.years")}
         </Badge>
       </div>
 
-      <StatGrid>
-        <Stat
-          emphasis
-          label={t("summary.effort")}
-          hint={t("summary.effortHint", { month: monthLabel(indicators.referenceMonth, locale) })}
-          value={money(indicators.monthlyEffort, locale)}
-          tone={indicators.monthlyEffort > 0 ? "negative" : "positive"}
-        />
-        {indicators.oneOffCostsAhead > 0 ? (
+      <Headline indicators={indicators} locale={locale} />
+
+      <NetPositionChart
+        points={chartPoints(projection, landmarks, {
+          now: t("summary.chartNow"),
+          ahead: t("summary.chartAhead"),
+          end: money(last.netPosition, locale),
+        })}
+        locale={locale}
+        caption={t("summary.chartCaption")}
+      />
+
+      <Section title={t("summary.dossier")}>
+        <StatGrid>
+          {indicators.oneOffCostsAhead > 0 ? (
+            <Stat
+              label={t("summary.oneOffAhead")}
+              hint={t("summary.oneOffAheadHint")}
+              value={money(indicators.oneOffCostsAhead, locale)}
+              tone="negative"
+            />
+          ) : null}
           <Stat
-            label={t("summary.oneOffAhead")}
-            hint={t("summary.oneOffAheadHint")}
-            value={money(indicators.oneOffCostsAhead, locale)}
+            label={t("summary.equityBuilt")}
+            hint={t("summary.equityBuiltHint")}
+            value={money(indicators.monthlyEquityBuilt, locale)}
+            tone="positive"
+          />
+          <Stat
+            label={t("summary.netAfterLoans")}
+            hint={
+              indicators.monthlyNetAfterLoans == null
+                ? undefined
+                : t("summary.netAfterLoansHint", {
+                    month: monthLabel(lastLoanEnd, locale),
+                  })
+            }
+            value={
+              indicators.monthlyNetAfterLoans == null
+                ? t("summary.netAfterLoansNever")
+                : money(indicators.monthlyNetAfterLoans, locale)
+            }
+            tone={(indicators.monthlyNetAfterLoans ?? 0) > 0 ? "positive" : "neutral"}
+          />
+          <Stat
+            label={t("summary.cashInvested")}
+            hint={t("summary.cashInvestedHint")}
+            value={money(indicators.cashInvested, locale)}
+          />
+          <Stat
+            label={t("summary.propertyValue")}
+            hint={
+              growthPpm === 0
+                ? t("summary.propertyValueFlat")
+                : t("summary.propertyValueGrown", {
+                    rate: percent(growthPpm, locale),
+                    year: yearOf(last.month),
+                  })
+            }
+            value={money(last.propertyValue, locale)}
+          />
+          <Stat
+            label={t("summary.netWorthNow")}
+            hint={t("summary.netWorthNowHint", {
+              value: money(atReference.propertyValue, locale),
+              debt: money(atReference.outstandingBalance, locale),
+            })}
+            value={money(indicators.netWorthNow, locale)}
+          />
+          <Stat
+            label={t("summary.cashInjected")}
+            hint={t("summary.cashInjectedHint")}
+            value={money(indicators.cashInjectedNow, locale)}
+          />
+          <Stat
+            label={t("summary.netWorth")}
+            hint={t("summary.netWorthHint", {
+              value: money(last.propertyValue, locale),
+              debt: money(last.outstandingBalance, locale),
+              month: monthLabel(last.month, locale),
+            })}
+            value={money(indicators.finalNetWorth, locale)}
+          />
+          <Stat
+            label={t("summary.totalCreditCost")}
+            hint={t("summary.totalCreditCostHint")}
+            value={money(indicators.totalCreditCost, locale)}
             tone="negative"
           />
-        ) : null}
-        <Stat
-          label={t("summary.equityBuilt")}
-          hint={t("summary.equityBuiltHint")}
-          value={money(indicators.monthlyEquityBuilt, locale)}
-          tone="positive"
-        />
-        <Stat
-          label={t("summary.netAfterLoans")}
-          hint={
-            indicators.monthlyNetAfterLoans == null
-              ? undefined
-              : t("summary.netAfterLoansHint", { month: monthLabel(lastLoanEnd, locale) })
-          }
-          value={
-            indicators.monthlyNetAfterLoans == null
-              ? t("summary.netAfterLoansNever")
-              : money(indicators.monthlyNetAfterLoans, locale)
-          }
-          tone={(indicators.monthlyNetAfterLoans ?? 0) > 0 ? "positive" : "neutral"}
-        />
-        <Stat
-          label={t("summary.cashInvested")}
-          hint={t("summary.cashInvestedHint")}
-          value={money(indicators.cashInvested, locale)}
-        />
-        <Stat
-          label={t("summary.propertyValue")}
-          hint={
-            growthPpm === 0
-              ? t("summary.propertyValueFlat")
-              : t("summary.propertyValueGrown", {
-                  rate: percent(growthPpm, locale),
-                  year: yearOf(last.month),
-                })
-          }
-          value={money(last.propertyValue, locale)}
-        />
-        <Stat
-          label={t("summary.netWorthNow")}
-          hint={t("summary.netWorthNowHint", {
-            value: money(atReference.propertyValue, locale),
-            debt: money(atReference.outstandingBalance, locale),
-          })}
-          value={money(indicators.netWorthNow, locale)}
-          tone="positive"
-        />
-        <Stat
-          emphasis
-          label={t("summary.netPositionNow")}
-          hint={t("summary.netPositionNowHint", {
-            value: money(atReference.propertyValue, locale),
-            debt: money(atReference.outstandingBalance, locale),
-            injected: money(indicators.cashInjectedNow, locale),
-          })}
-          value={money(indicators.netPositionNow, locale)}
-          tone={indicators.netPositionNow < 0 ? "negative" : "positive"}
-        />
-        <Stat
-          label={t("summary.netPositionBreakEven")}
-          hint={t("summary.netPositionBreakEvenHint")}
-          value={
-            indicators.netPositionBreakEvenMonth == null
-              ? t("summary.netPositionBreakEvenNever")
-              : monthLabel(indicators.netPositionBreakEvenMonth, locale)
-          }
-        />
-        <Stat
-          label={t("summary.netWorth")}
-          hint={t("summary.netWorthHint", {
-            value: money(last.propertyValue, locale),
-            debt: money(last.outstandingBalance, locale),
-            month: monthLabel(last.month, locale),
-          })}
-          value={money(indicators.finalNetWorth, locale)}
-        />
-      </StatGrid>
+        </StatGrid>
+      </Section>
 
-      <CostBreakdown
-        indicators={indicators}
-        purchasePrice={bundle.property.purchasePrice ?? 0}
-        creditCost={indicators.totalCreditCost}
-        endYear={yearOf(last.month)}
-        locale={locale}
-      />
+      <Section title={t("summary.costsTitle")}>
+        <CostBreakdown
+          indicators={indicators}
+          purchasePrice={bundle.property.purchasePrice ?? 0}
+          creditCost={indicators.totalCreditCost}
+          endYear={yearOf(last.month)}
+          locale={locale}
+        />
+      </Section>
 
       {ledger.outstanding > 0 ? (
         <Link
@@ -211,29 +193,26 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
         </p>
       ) : null}
 
-      <Card>
-        <CardHeader
-          title={t("summary.loans")}
-          action={
-            <LoanForm propertyId={id} locale={locale} today={now} label={t("summary.addLoan")} />
-          }
-        />
-        <CardBody>
-          {bundle.loans.length === 0 ? (
-            <p className="text-sm text-ink-3">{t("summary.loansEmpty")}</p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-line-soft">
-              {bundle.loans.map(({ loan, ratePeriods }) => (
-                <li key={loan.id} className="flex flex-col gap-3 py-3 first:pt-0">
-                  <div className="flex flex-wrap items-baseline justify-between gap-3">
-                    <span className="text-sm font-medium text-ink">{loan.label}</span>
-                    <span className="text-sm tabular-nums text-ink-2">
-                      {money(loan.principal, locale)} ·{" "}
-                      {percent(ratePeriods[0]?.annualRatePpm ?? null, locale)} · {loan.termMonths}{" "}
-                      {t("fields.months")} · {loan.startDate}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
+      <Section
+        title={t("summary.loans")}
+        action={
+          <LoanForm propertyId={id} locale={locale} today={now} label={t("summary.addLoan")} />
+        }
+      >
+        {bundle.loans.length === 0 ? (
+          <p className="text-[13.5px] text-ink-3">{t("summary.loansEmpty")}</p>
+        ) : (
+          <SectionList>
+            {bundle.loans.map(({ loan, ratePeriods }) => (
+              <SectionItem
+                key={loan.id}
+                title={loan.label}
+                detail={`${money(loan.principal, locale)} · ${percent(
+                  ratePeriods[0]?.annualRatePpm ?? null,
+                  locale,
+                )} · ${loan.termMonths} ${t("fields.months")} · ${loan.startDate}`}
+                actions={
+                  <>
                     <LoanForm
                       propertyId={id}
                       loanId={loan.id}
@@ -251,37 +230,34 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                       locale={locale}
                       label={t("summary.delete")}
                     />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardBody>
-      </Card>
+                  </>
+                }
+              />
+            ))}
+          </SectionList>
+        )}
+      </Section>
 
-      <Card>
-        <CardHeader
-          title={t("summary.leases")}
-          action={
-            <LeaseForm propertyId={id} locale={locale} today={now} label={t("summary.addLease")} />
-          }
-        />
-        <CardBody>
-          {bundle.leases.length === 0 ? (
-            <p className="text-sm text-ink-3">{t("summary.leasesEmpty")}</p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-line-soft">
-              {bundle.leases.map((entry) => (
-                <li key={entry.id} className="flex flex-col gap-3 py-3 first:pt-0">
-                  <div className="flex flex-wrap items-baseline justify-between gap-3">
-                    <span className="text-sm font-medium text-ink">{entry.tenantLabel}</span>
-                    <span className="text-sm tabular-nums text-ink-2">
-                      {money(entry.monthlyRent, locale)} ·{" "}
-                      {percent(entry.indexationRatePpm, locale)} · {entry.startDate} →{" "}
-                      {entry.endDate ?? "—"}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
+      <Section
+        title={t("summary.leases")}
+        action={
+          <LeaseForm propertyId={id} locale={locale} today={now} label={t("summary.addLease")} />
+        }
+      >
+        {bundle.leases.length === 0 ? (
+          <p className="text-[13.5px] text-ink-3">{t("summary.leasesEmpty")}</p>
+        ) : (
+          <SectionList>
+            {bundle.leases.map((entry) => (
+              <SectionItem
+                key={entry.id}
+                title={entry.tenantLabel}
+                detail={`${money(entry.monthlyRent, locale)} · ${percent(
+                  entry.indexationRatePpm,
+                  locale,
+                )} · ${entry.startDate} → ${entry.endDate ?? "-"}`}
+                actions={
+                  <>
                     <LeaseForm
                       propertyId={id}
                       leaseId={entry.id}
@@ -295,53 +271,56 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                       locale={locale}
                       label={t("summary.delete")}
                     />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardBody>
-      </Card>
+                  </>
+                }
+              />
+            ))}
+          </SectionList>
+        )}
+      </Section>
 
-      <Card>
-        <CardHeader
-          title={t("summary.lines")}
-          action={
-            <FlowLineForm propertyId={id} locale={locale} today={now} label={t("summary.addLine")} />
-          }
-        />
-        <CardBody>
-          {bundle.lines.length === 0 ? (
-            <p className="text-sm text-ink-3">{t("summary.linesEmpty")}</p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-line-soft">
-              {bundle.lines.map((line) => (
-                <li key={line.id} className="flex flex-col gap-3 py-3 first:pt-0">
-                  <div className="flex flex-wrap items-baseline justify-between gap-3">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium text-ink">{line.label}</span>
-                      <span className="text-xs text-ink-3">
-                        {t(`fields.flow${line.kind === "expense" ? "Expense" : "Income"}`)} ·{" "}
-                        {t(`fields.nature${NATURE_KEY[natureOf(line)]}`)}
-                        {line.recurrence !== "one_off"
-                          ? ` · ${t(`fields.recurrence${PERIODICITY_KEY[line.recurrence]}`)}`
-                          : ""}
-                        {line.capitalize && line.amortizationYears
-                          ? ` · ${line.amortizationYears} ${t("fields.years")}`
-                          : ""}
-                      </span>
-                    </div>
-                    <span
-                      className={`text-sm tabular-nums ${
-                        line.kind === "expense" ? "text-negative" : "text-positive"
-                      }`}
-                    >
-                      {line.amountMode === "percent_of_rent"
-                        ? percent(line.amount, locale)
-                        : money(line.amount, locale)}
+      <Section
+        title={t("summary.lines")}
+        action={
+          <FlowLineForm
+            propertyId={id}
+            locale={locale}
+            today={now}
+            label={t("summary.addLine")}
+          />
+        }
+      >
+        {bundle.lines.length === 0 ? (
+          <p className="text-[13.5px] text-ink-3">{t("summary.linesEmpty")}</p>
+        ) : (
+          <SectionList>
+            {bundle.lines.map((line) => (
+              <SectionItem
+                key={line.id}
+                title={
+                  <span className="flex flex-col gap-0.5">
+                    {line.label}
+                    <span className="text-[11.5px] font-normal text-ink-3">
+                      {t(`fields.flow${line.kind === "expense" ? "Expense" : "Income"}`)} ·{" "}
+                      {t(`fields.nature${NATURE_KEY[natureOf(line)]}`)}
+                      {line.recurrence !== "one_off"
+                        ? ` · ${t(`fields.recurrence${PERIODICITY_KEY[line.recurrence]}`)}`
+                        : ""}
+                      {line.capitalize && line.amortizationYears
+                        ? ` · ${line.amortizationYears} ${t("fields.years")}`
+                        : ""}
                     </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  </span>
+                }
+                detail={
+                  <span className={line.kind === "expense" ? "text-negative" : "text-positive"}>
+                    {line.amountMode === "percent_of_rent"
+                      ? percent(line.amount, locale)
+                      : money(line.amount, locale)}
+                  </span>
+                }
+                actions={
+                  <>
                     <FlowLineForm
                       propertyId={id}
                       lineId={line.id}
@@ -355,27 +334,21 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                       locale={locale}
                       label={t("summary.delete")}
                     />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardBody>
-      </Card>
+                  </>
+                }
+              />
+            ))}
+          </SectionList>
+        )}
+      </Section>
 
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-display text-sm font-bold tracking-tight">
-            {t("summary.timelineAll")}
-          </h2>
-          <p className="text-xs text-ink-3">{t("summary.timelineAllHint")}</p>
-        </div>
+      <Section title={t("summary.timelineAll")} hint={t("summary.timelineAllHint")}>
         <Timeline
           projection={projection}
           locale={locale}
           referenceMonth={indicators.referenceMonth}
         />
-      </section>
+      </Section>
     </AppShell>
   );
 }

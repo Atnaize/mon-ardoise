@@ -52,8 +52,6 @@ describe("propertySchema", () => {
   const valid = {
     name: "  Maison  ",
     type: "house",
-    region: "wallonie",
-    status: "rented",
     acquisitionDate: "",
     purchasePrice: "200000",
     currentValue: "190000",
@@ -213,8 +211,6 @@ describe("loanSchema · conventions belges par défaut", () => {
       property: {
         name: "Maison",
         type: "house",
-        region: "wallonie",
-        status: "rented",
         acquisitionDate: "",
         purchasePrice: "200000",
         currentValue: "190000",

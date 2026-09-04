@@ -14,9 +14,7 @@ import {
 
 import { user } from "./auth";
 
-export const regionEnum = pgEnum("region", ["wallonie", "bruxelles", "flandre"]);
 export const propertyTypeEnum = pgEnum("property_type", ["house", "apartment"]);
-export const propertyStatusEnum = pgEnum("property_status", ["preparing", "rented", "occupied"]);
 export const memberRoleEnum = pgEnum("member_role", ["owner", "editor", "viewer"]);
 export const amortizationEnum = pgEnum("amortization", ["annuity", "constant_principal"]);
 export const deferralEnum = pgEnum("deferral", ["none", "interest_only", "full"]);
@@ -54,8 +52,6 @@ export const property = pgTable("property", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   type: propertyTypeEnum("type").notNull(),
-  region: regionEnum("region").notNull().default("wallonie"),
-  status: propertyStatusEnum("status").notNull().default("preparing"),
   acquisitionDate: date("acquisition_date", { mode: "string" }),
   purchasePrice: integer("purchase_price"),
   currentValue: integer("current_value"),

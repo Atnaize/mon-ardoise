@@ -7,3 +7,7 @@ export function todayIso(): string {
 export function currentMonth(): YearMonth {
   return fromIsoDate(`${todayIso().slice(0, 7)}-01`);
 }
+
+export function currentYear(): number {
+  return Number(todayIso().slice(0, 4));
+}

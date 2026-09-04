@@ -11,11 +11,14 @@ export function InlineForm({
   label,
   locale,
   action,
+  variant = "secondary",
   children,
 }: {
   label: string;
   locale: string;
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
+  /** Le déclencheur replié. « ghost » pour une action de ligne, qui ne mérite pas un cadre. */
+  variant?: "secondary" | "ghost";
   children: (errors: FieldErrors) => ReactNode;
 }) {
   const t = useTranslations("common");
@@ -32,7 +35,7 @@ export function InlineForm({
 
   if (!open) {
     return (
-      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+      <Button variant={variant} size="sm" onClick={() => setOpen(true)}>
         {label}
       </Button>
     );

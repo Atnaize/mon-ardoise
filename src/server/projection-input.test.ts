@@ -14,8 +14,6 @@ function bundle(overrides: Partial<PropertyBundle> = {}): PropertyBundle {
       id: "prop-1",
       name: "Maison",
       type: "house",
-      region: "wallonie",
-      status: "rented",
       acquisitionDate: "2023-08-31",
       purchasePrice: eurosToCents(250_000),
       currentValue: eurosToCents(320_000),
