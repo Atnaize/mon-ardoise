@@ -25,6 +25,7 @@ import {
   deleteLeaseAction,
   deleteLoanAction,
 } from "@/server/actions";
+import { roleOf } from "@/server/projection-input";
 import { loadProjection } from "@/server/properties";
 
 const PERIODICITY_KEY = {
@@ -59,6 +60,9 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
     projection.find((row) => row.month >= indicators.referenceMonth) ?? projection[0];
   const growthPpm = bundle.property.valueGrowthRatePpm;
   const now = todayIso();
+  // Un lecteur consulte : les déclencheurs d'ajout, de modification et de
+  // suppression ne s'affichent pas plutôt que d'échouer à l'envoi.
+  const canEdit = roleOf(bundle) !== "viewer";
 
   return (
     <AppShell>
@@ -66,6 +70,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
         name={bundle.property.name}
         propertyId={id}
         hasLease={bundle.leases.length > 0}
+        role={roleOf(bundle)}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -196,7 +201,9 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
       <Section
         title={t("summary.loans")}
         action={
-          <LoanForm propertyId={id} locale={locale} today={now} label={t("summary.addLoan")} />
+          canEdit ? (
+            <LoanForm propertyId={id} locale={locale} today={now} label={t("summary.addLoan")} />
+          ) : undefined
         }
       >
         {bundle.loans.length === 0 ? (
@@ -212,25 +219,27 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                   locale,
                 )} · ${loan.termMonths} ${t("fields.months")} · ${loan.startDate}`}
                 actions={
-                  <>
-                    <LoanForm
-                      propertyId={id}
-                      loanId={loan.id}
-                      locale={locale}
-                      today={now}
-                      label={t("summary.edit")}
-                      defaults={{
-                        ...loan,
-                        annualRatePpm: ratePeriods[0]?.annualRatePpm,
-                        rateBasis: ratePeriods[0]?.rateBasis,
-                      }}
-                    />
-                    <DeleteForm
-                      action={deleteLoanAction.bind(null, id, loan.id)}
-                      locale={locale}
-                      label={t("summary.delete")}
-                    />
-                  </>
+                  canEdit ? (
+                    <>
+                      <LoanForm
+                        propertyId={id}
+                        loanId={loan.id}
+                        locale={locale}
+                        today={now}
+                        label={t("summary.edit")}
+                        defaults={{
+                          ...loan,
+                          annualRatePpm: ratePeriods[0]?.annualRatePpm,
+                          rateBasis: ratePeriods[0]?.rateBasis,
+                        }}
+                      />
+                      <DeleteForm
+                        action={deleteLoanAction.bind(null, id, loan.id)}
+                        locale={locale}
+                        label={t("summary.delete")}
+                      />
+                    </>
+                  ) : null
                 }
               />
             ))}
@@ -241,7 +250,9 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
       <Section
         title={t("summary.leases")}
         action={
-          <LeaseForm propertyId={id} locale={locale} today={now} label={t("summary.addLease")} />
+          canEdit ? (
+            <LeaseForm propertyId={id} locale={locale} today={now} label={t("summary.addLease")} />
+          ) : undefined
         }
       >
         {bundle.leases.length === 0 ? (
@@ -257,21 +268,23 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                   locale,
                 )} · ${entry.startDate} → ${entry.endDate ?? "-"}`}
                 actions={
-                  <>
-                    <LeaseForm
-                      propertyId={id}
-                      leaseId={entry.id}
-                      locale={locale}
-                      today={now}
-                      label={t("summary.edit")}
-                      defaults={entry}
-                    />
-                    <DeleteForm
-                      action={deleteLeaseAction.bind(null, id, entry.id)}
-                      locale={locale}
-                      label={t("summary.delete")}
-                    />
-                  </>
+                  canEdit ? (
+                    <>
+                      <LeaseForm
+                        propertyId={id}
+                        leaseId={entry.id}
+                        locale={locale}
+                        today={now}
+                        label={t("summary.edit")}
+                        defaults={entry}
+                      />
+                      <DeleteForm
+                        action={deleteLeaseAction.bind(null, id, entry.id)}
+                        locale={locale}
+                        label={t("summary.delete")}
+                      />
+                    </>
+                  ) : null
                 }
               />
             ))}
@@ -282,12 +295,14 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
       <Section
         title={t("summary.lines")}
         action={
-          <FlowLineForm
-            propertyId={id}
-            locale={locale}
-            today={now}
-            label={t("summary.addLine")}
-          />
+          canEdit ? (
+            <FlowLineForm
+              propertyId={id}
+              locale={locale}
+              today={now}
+              label={t("summary.addLine")}
+            />
+          ) : undefined
         }
       >
         {bundle.lines.length === 0 ? (
@@ -320,21 +335,23 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                   </span>
                 }
                 actions={
-                  <>
-                    <FlowLineForm
-                      propertyId={id}
-                      lineId={line.id}
-                      locale={locale}
-                      today={now}
-                      label={t("summary.edit")}
-                      defaults={line}
-                    />
-                    <DeleteForm
-                      action={deleteFlowLineAction.bind(null, id, line.id)}
-                      locale={locale}
-                      label={t("summary.delete")}
-                    />
-                  </>
+                  canEdit ? (
+                    <>
+                      <FlowLineForm
+                        propertyId={id}
+                        lineId={line.id}
+                        locale={locale}
+                        today={now}
+                        label={t("summary.edit")}
+                        defaults={line}
+                      />
+                      <DeleteForm
+                        action={deleteFlowLineAction.bind(null, id, line.id)}
+                        locale={locale}
+                        label={t("summary.delete")}
+                      />
+                    </>
+                  ) : null
                 }
               />
             ))}

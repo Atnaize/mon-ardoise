@@ -54,6 +54,21 @@ export async function requireEditor(userId: string, propertyId: string) {
   return member;
 }
 
+/**
+ * Les décisions qui portent sur le bien lui-même et non sur son contenu : qui y
+ * accède, quelle part chacun détient, et sa suppression. Un éditeur saisit des
+ * loyers ; il ne fait pas entrer ni sortir quelqu'un du bien.
+ */
+export async function requireOwner(userId: string, propertyId: string) {
+  const member = await membershipOf(userId, propertyId);
+
+  if (!member || member.role !== "owner") {
+    throw new NotAuthorized();
+  }
+
+  return member;
+}
+
 async function loadBundles(
   propertyIds: string[],
   members: Map<string, Awaited<ReturnType<typeof membershipOf>>>,

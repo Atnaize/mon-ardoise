@@ -9,6 +9,7 @@ import { Stat, StatGrid } from "@/components/ui/stat";
 import { currentMonth, todayIso } from "@/lib/clock";
 import { money, monthLabel } from "@/lib/format";
 import { currentUser } from "@/lib/session";
+import { roleOf } from "@/server/projection-input";
 import { loadRentLedger } from "@/server/properties";
 
 export default async function RentPage({ params }: PageProps<"/[locale]/properties/[id]/rent">) {
@@ -27,6 +28,7 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
   }
 
   const { bundle, ledger } = loaded;
+  const role = roleOf(bundle);
   const activeLease = bundle.leases.find((entry) => entry.status !== "ended") ?? bundle.leases[0];
 
   // Sans bail, quatre montants à zéro et un « à jour » vert affirmeraient qu'un loyer
@@ -34,7 +36,12 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
   if (bundle.leases.length === 0) {
     return (
       <AppShell>
-        <PropertyHeader name={bundle.property.name} propertyId={id} hasLease={false} />
+        <PropertyHeader
+          name={bundle.property.name}
+          propertyId={id}
+          hasLease={false}
+          role={role}
+        />
         <p className="text-[13.5px] leading-normal text-ink-2">{t("rent.noLease")}</p>
       </AppShell>
     );
@@ -46,6 +53,7 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
         name={bundle.property.name}
         propertyId={id}
         hasLease={bundle.leases.length > 0}
+        role={role}
       />
 
       <p className="text-[13.5px] leading-normal text-ink-2">{t("rent.intro")}</p>
@@ -101,6 +109,7 @@ export default async function RentPage({ params }: PageProps<"/[locale]/properti
           leaseId={activeLease?.id ?? null}
           locale={locale}
           today={todayIso()}
+          canEdit={role !== "viewer"}
         />
       )}
     </AppShell>

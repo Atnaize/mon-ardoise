@@ -39,8 +39,8 @@ abandonné avec Eric.
 
 - [ ] **Q2 · Extension de la maison (bien B)** : prêt rénovation, vague de frais
       de travaux, financement à deux. Le schéma le supporte déjà (prêts multiples,
-      `ownership_share` / `contribution_share`) ; reste l'UI de suivi de chantier.
-      → après le lot 6.
+      `ownership_share` / `contribution_share`), et les quote-parts se saisissent
+      depuis le lot 6 ; reste l'UI de suivi de chantier.
 - [ ] **Q24 · Calcul fiscal IPP automatique** : RC indexé × 1,4, taux marginal,
       additionnels communaux, chèque habitat. V1 : champ manuel assisté.
       → V2. La fiscalité belge du logement bouge tous les deux ans.
@@ -68,6 +68,24 @@ abandonné avec Eric.
       un bien et tout ce qu'il contient. Ajouter une confirmation.
 - [ ] **Périodes de taux multiples dans l'UI** : le formulaire de prêt ne gère que
       la période initiale ; le moteur en accepte autant qu'on veut.
+
+## Suite du lot 6
+
+- [x] ~~**Partage d'un bien**~~ : invitation par code, écran des membres, rôles
+      appliqués, quote-parts de propriété et de contribution saisissables.
+- [ ] **Quitter un bien de soi-même** : seul un propriétaire retire un membre.
+      Un lecteur invité par erreur ne peut pas sortir tout seul.
+- [ ] **Invitation par e-mail** : il n'y a aucune infrastructure d'envoi, donc le
+      lien se copie et se transmet à la main. Le champ `invitation.email` sert
+      seulement à rendre l'invitation nominative. À reprendre avec Q31, qui
+      apporte l'e-mail pour les rappels de retard.
+- [ ] **Le total des parts de propriété ne contraint rien** : il est affiché, et
+      signalé quand il ne fait pas 100 %. Le forcer casserait l'état
+      intermédiaire entre l'invitation envoyée et la part fixée.
+- [ ] **Vue consolidée multi-biens** : annoncée au lot 6 dans le cadrage, pas
+      livrée. La page d'accueil liste les biens un par un ; elle n'additionne ni
+      les efforts mensuels ni le patrimoine net, alors que la quote-part de
+      contribution rend enfin cette somme juste.
 
 ## Suite du lot 5
 

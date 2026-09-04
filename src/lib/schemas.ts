@@ -55,6 +55,36 @@ export const checkbox = z
   .optional()
   .transform((value) => value === "on" || value === "true");
 
+/**
+ * Une quote-part se saisit en pourcentage et se stocke en pour mille : un bien
+ * détenu à trois se note 33,3 %, ce qu'un entier de pourcentage ne sait pas
+ * dire.
+ *
+ * À ne pas confondre avec `percent`, qui produit des ppm pour les taux. Les
+ * deux unités cohabitent dans le schéma, et les mélanger fausse tout d'un
+ * facteur mille.
+ */
+export const permille = decimalField("Quote-part invalide")
+  .transform((value) => Math.round(value * 10))
+  .refine((value) => value >= 0 && value <= 1000, "Quote-part entre 0 et 100 %");
+
+export const ROLES = ["owner", "editor", "viewer"] as const;
+
+export const invitationSchema = z.object({
+  role: z.enum(ROLES),
+  // Facultative. Renseignée, elle rend l'invitation nominative : le lien
+  // transféré ne s'accepte plus par un tiers.
+  email: z
+    .union([z.email("Adresse e-mail invalide"), z.literal("")])
+    .transform((value) => (value === "" ? null : value.toLowerCase())),
+});
+
+export const memberSchema = z.object({
+  role: z.enum(ROLES),
+  ownershipShare: permille,
+  contributionShare: permille,
+});
+
 export const propertySchema = z.object({
   name: z.string().trim().min(1, "Donne un nom au bien").max(120),
   type: z.enum(["house", "apartment"]),
@@ -137,3 +167,5 @@ export type LoanInput = z.output<typeof loanSchema>;
 export type LeaseInput = z.output<typeof leaseSchema>;
 export type FlowLineInput = z.output<typeof flowLineSchema>;
 export type RentPaymentInput = z.output<typeof rentPaymentSchema>;
+export type InvitationInput = z.output<typeof invitationSchema>;
+export type MemberInput = z.output<typeof memberSchema>;

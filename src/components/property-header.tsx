@@ -12,10 +12,12 @@ export async function PropertyHeader({
   name,
   propertyId,
   hasLease,
+  role,
 }: {
   name: string;
   propertyId: string;
   hasLease: boolean;
+  role: "owner" | "editor" | "viewer";
 }) {
   const t = await getTranslations("property");
 
@@ -30,7 +32,7 @@ export async function PropertyHeader({
       <h1 className="m-0 font-display text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
         {name}
       </h1>
-      <PropertyTabs propertyId={propertyId} hasLease={hasLease} />
+      <PropertyTabs propertyId={propertyId} hasLease={hasLease} role={role} />
     </div>
   );
 }

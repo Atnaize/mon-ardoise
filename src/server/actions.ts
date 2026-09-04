@@ -7,6 +7,7 @@ import { db } from "@/db";
 import {
   actualEntry,
   flowLine,
+  invitation,
   lease,
   loan,
   loanRatePeriod,
@@ -18,10 +19,13 @@ import { redirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { toIsoDate } from "@/engine/month";
 import { RENT_CATEGORY } from "@/lib/categories";
+import { normalizeCode } from "@/lib/invitation";
 import {
   flowLineSchema,
+  invitationSchema,
   leaseSchema,
   loanSchema,
+  memberSchema,
   propertySchema,
   rentPaymentSchema,
   wizardSchema,
@@ -29,7 +33,8 @@ import {
 import { currentUser } from "@/lib/session";
 
 import { fieldErrors, nestFormData, succeeded, type ActionState } from "./form";
-import { requireEditor } from "./properties";
+import { acceptInvitation, createInvitation, isLastOwner } from "./members";
+import { NotAuthorized, requireEditor, requireOwner } from "./properties";
 
 type Locale = (typeof routing.locales)[number];
 
@@ -53,6 +58,14 @@ async function editorOf(propertyId: string, locale: Locale) {
   const user = await signedIn(locale);
 
   await requireEditor(user.id, propertyId);
+
+  return user;
+}
+
+async function ownerOf(propertyId: string, locale: Locale) {
+  const user = await signedIn(locale);
+
+  await requireOwner(user.id, propertyId);
 
   return user;
 }
@@ -185,7 +198,9 @@ export async function updatePropertyAction(
 export async function deletePropertyAction(propertyId: string, formData: FormData): Promise<void> {
   const locale = localeFrom(formData);
 
-  await editorOf(propertyId, locale);
+  // Propriétaire, pas éditeur : à deux sur un bien, celui qui saisit les loyers
+  // ne doit pas pouvoir emporter le prêt, les baux et l'ardoise avec un clic.
+  await ownerOf(propertyId, locale);
 
   await db.delete(property).where(eq(property.id, propertyId));
 
@@ -436,6 +451,133 @@ export async function deleteRentPaymentAction(
     .where(and(eq(actualEntry.id, entryId), eq(actualEntry.propertyId, propertyId)));
 
   refresh();
+}
+
+/*
+ * Partager un bien. Trois règles tiennent tout le reste :
+ *
+ * 1. Seul un propriétaire fait entrer et sortir quelqu'un. Un éditeur saisit le
+ *    contenu du bien, il ne décide pas de qui le voit.
+ * 2. La dernière place de propriétaire est verrouillée : un bien sans
+ *    propriétaire ne se règle plus et ne se supprime plus.
+ * 3. Le rôle donne l'accès, la quote-part répartit l'argent. Les deux se
+ *    modifient au même endroit, mais jamais l'un pour l'autre.
+ */
+
+export async function createInvitationAction(
+  propertyId: string,
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const locale = localeFrom(formData);
+  const user = await ownerOf(propertyId, locale);
+
+  const parsed = invitationSchema.safeParse(nestFormData(formData));
+
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error) };
+  }
+
+  await createInvitation({
+    propertyId,
+    invitedBy: user.id,
+    role: parsed.data.role,
+    email: parsed.data.email,
+  });
+
+  refresh();
+
+  return succeeded();
+}
+
+export async function revokeInvitationAction(
+  propertyId: string,
+  invitationId: string,
+  formData: FormData,
+): Promise<void> {
+  await ownerOf(propertyId, localeFrom(formData));
+
+  await db
+    .delete(invitation)
+    .where(and(eq(invitation.id, invitationId), eq(invitation.propertyId, propertyId)));
+
+  refresh();
+}
+
+export async function updateMemberAction(
+  propertyId: string,
+  memberId: string,
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await ownerOf(propertyId, localeFrom(formData));
+
+  const parsed = memberSchema.safeParse(nestFormData(formData));
+
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error) };
+  }
+
+  const input = parsed.data;
+
+  if (input.role !== "owner" && (await isLastOwner(propertyId, memberId))) {
+    return { errors: { role: "C'est le dernier propriétaire du bien : il en faut un." } };
+  }
+
+  await db
+    .update(propertyMember)
+    .set({
+      role: input.role,
+      ownershipSharePermille: input.ownershipShare,
+      contributionSharePermille: input.contributionShare,
+    })
+    .where(and(eq(propertyMember.id, memberId), eq(propertyMember.propertyId, propertyId)));
+
+  refresh();
+
+  return succeeded();
+}
+
+export async function removeMemberAction(
+  propertyId: string,
+  memberId: string,
+  formData: FormData,
+): Promise<void> {
+  await ownerOf(propertyId, localeFrom(formData));
+
+  // L'écran ne propose pas de retirer le dernier propriétaire ; la garde est ici
+  // parce qu'une Server Action s'atteint aussi sans passer par l'écran.
+  if (await isLastOwner(propertyId, memberId)) {
+    throw new NotAuthorized();
+  }
+
+  await db
+    .delete(propertyMember)
+    .where(and(eq(propertyMember.id, memberId), eq(propertyMember.propertyId, propertyId)));
+
+  refresh();
+}
+
+/**
+ * Accepter, c'est un POST : une invitation ne se consomme pas à l'ouverture du
+ * lien, sinon un aperçu de message dans une boîte mail suffirait à la brûler.
+ */
+export async function acceptInvitationAction(code: string, formData: FormData): Promise<void> {
+  const locale = localeFrom(formData);
+  const user = await signedIn(locale);
+
+  const result = await acceptInvitation(normalizeCode(code), {
+    id: user.id,
+    email: user.email,
+  });
+
+  refresh();
+
+  if (result.status === "ok") {
+    redirect({ href: `/properties/${result.propertyId}`, locale });
+  }
+
+  // Refusée : la page du lien se réaffiche et dit pourquoi.
 }
 
 /**

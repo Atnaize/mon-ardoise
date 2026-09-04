@@ -6,9 +6,12 @@ import { percentToPpm } from "@/engine/rate";
 import {
   euros,
   flowLineSchema,
+  invitationSchema,
   loanSchema,
+  memberSchema,
   optionalEuros,
   percent,
+  permille,
   propertySchema,
   wizardSchema,
 } from "./schemas";
@@ -223,5 +226,81 @@ describe("loanSchema · conventions belges par défaut", () => {
 
     expect(parsed.success).toBe(true);
     expect(parsed.data?.loan?.rateBasis).toBe("nominal_12");
+  });
+});
+
+describe("permille · la quote-part", () => {
+  it("passe du pourcentage au pour mille", () => {
+    expect(permille.parse("50")).toBe(500);
+    expect(permille.parse("100")).toBe(1000);
+    expect(permille.parse("0")).toBe(0);
+  });
+
+  it("garde la décimale d'un bien détenu à trois", () => {
+    expect(permille.parse("33,3")).toBe(333);
+  });
+
+  it("ne se confond pas avec un taux : cent pour cent font mille, pas un million", () => {
+    expect(permille.parse("100")).toBe(1000);
+    expect(percent.parse("100")).toBe(1_000_000);
+  });
+
+  it("refuse ce qui sort de zéro-cent", () => {
+    expect(permille.safeParse("-1").success).toBe(false);
+    expect(permille.safeParse("101").success).toBe(false);
+  });
+
+  it("refuse ce qui n'est pas un nombre", () => {
+    expect(permille.safeParse("moitié").success).toBe(false);
+  });
+});
+
+describe("invitationSchema", () => {
+  it("accepte une invitation sans adresse : le lien vaut pour qui le reçoit", () => {
+    const parsed = invitationSchema.safeParse({ role: "editor", email: "" });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.email).toBeNull();
+  });
+
+  it("range l'adresse en minuscules, pour que la comparaison à l'acceptation tienne", () => {
+    const parsed = invitationSchema.safeParse({ role: "viewer", email: "Compagne@Example.com" });
+
+    expect(parsed.data?.email).toBe("compagne@example.com");
+  });
+
+  it("refuse une adresse mal formée plutôt que de la garder en l'état", () => {
+    expect(invitationSchema.safeParse({ role: "viewer", email: "compagne@" }).success).toBe(false);
+  });
+
+  it("refuse un rôle inventé", () => {
+    expect(invitationSchema.safeParse({ role: "admin", email: "" }).success).toBe(false);
+  });
+});
+
+describe("memberSchema", () => {
+  it("lit les deux quote-parts séparément", () => {
+    const parsed = memberSchema.safeParse({
+      role: "owner",
+      ownershipShare: "50",
+      contributionShare: "60",
+    });
+
+    expect(parsed.data).toEqual({
+      role: "owner",
+      ownershipShare: 500,
+      contributionShare: 600,
+    });
+  });
+
+  it("laisse un lecteur à zéro : le rôle donne l'accès, pas la part", () => {
+    const parsed = memberSchema.safeParse({
+      role: "viewer",
+      ownershipShare: "0",
+      contributionShare: "0",
+    });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.ownershipShare).toBe(0);
   });
 });

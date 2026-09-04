@@ -37,6 +37,14 @@ export interface PropertyBundle {
   leases: LeaseRow[];
 }
 
+/**
+ * Le rôle du lecteur sur ce bien. Sans ligne de membre, on suppose le moins de
+ * droits : un bundle chargé sans appartenance ne doit pas ouvrir la saisie.
+ */
+export function roleOf(bundle: PropertyBundle): "owner" | "editor" | "viewer" {
+  return bundle.member?.role ?? "viewer";
+}
+
 function monthOrNull(iso: string | null): YearMonth | null {
   return iso == null ? null : fromIsoDate(iso);
 }
@@ -120,8 +128,6 @@ export function toProjectionInput(
   bundle: PropertyBundle,
   startMonth: YearMonth,
 ): ProjectionInput {
-  const contribution = bundle.member?.contributionSharePermille ?? 0;
-
   return {
     startMonth,
     horizonMonths: horizonThroughYearEnd(startMonth, bundle.property.horizonYears),
@@ -134,6 +140,14 @@ export function toProjectionInput(
     loans: bundle.loans.map(toLoan),
     lines: bundle.lines.map(toFlowLine),
     leases: bundle.leases.map(toLease),
-    sharePermille: contribution > 0 ? contribution : 1000,
+    /*
+     * Sans ligne de membre, le bien compte pour entier : c'est un bundle chargé
+     * hors appartenance, il n'y a personne à qui attribuer une part.
+     *
+     * Avec une ligne, sa quote-part fait foi, zéro compris. Le repli sur 1000
+     * qui tenait ici avant l'écran des membres est devenu faux : un lecteur sans
+     * part verrait sa colonne « part » afficher tout le bien.
+     */
+    sharePermille: bundle.member ? bundle.member.contributionSharePermille : 1000,
   };
 }

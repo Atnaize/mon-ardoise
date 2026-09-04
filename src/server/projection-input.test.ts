@@ -124,7 +124,7 @@ describe("toProjectionInput", () => {
     expect(toProjectionInput(bundle(), start).sharePermille).toBe(1000);
   });
 
-  it("prend la quote-part entière quand la contribution est à zéro", () => {
+  it("prend la contribution à la lettre, zéro compris", () => {
     const member = {
       id: "m-1",
       propertyId: "prop-1",
@@ -135,7 +135,7 @@ describe("toProjectionInput", () => {
       createdAt: NOW,
     };
 
-    expect(toProjectionInput(bundle({ member }), start).sharePermille).toBe(1000);
+    expect(toProjectionInput(bundle({ member }), start).sharePermille).toBe(0);
   });
 
   it("applique la quote-part de contribution quand elle est renseignée", () => {

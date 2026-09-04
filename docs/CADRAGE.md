@@ -36,8 +36,9 @@ pas, au lieu d'afficher un « 0 % » trompeur.
 à deux, l'app dira « ce bien coûte 1 400 €/mois » alors que ton effort réel est de
 700 €. Sans quote-part, tous tes chiffres personnels sont faux d'un facteur deux.
 Les deux champs sont dans le schéma depuis le lot 0 (`ownership_share_permille`
-et `contribution_share_permille`) ; l'UI qui les expose arrive au lot 6. Le
-stockage est gratuit, la migration rétroactive ne l'est pas.
+et `contribution_share_permille`) et l'UI qui les expose est arrivée au lot 6. Le
+stockage est gratuit, la migration rétroactive ne l'est pas : les deux colonnes
+ont attendu six lots sans coûter une seule migration.
 
 **« Partager » et « posséder » sont deux notions distinctes.** Un ami à qui tu
 montres un bien en lecture n'a aucune quote-part ; ta compagne en détient la
@@ -268,7 +269,7 @@ chiffres faux.
 | 3 · Restitution | Timeline et vue annuelle **livrées** au lot 2 ; restent les graphiques Recharts | **Suivant** |
 | 4 · Scénarios | Duplication, substitution d'hypothèses, comparaison côte à côte | À faire |
 | 5 · Réel vs prévu | Loyers : encodage mois par mois, statut par échéance, ardoise et alerte de retard | **Livré pour les loyers** : les frais réels restent à pointer |
-| 6 · Partage | Invitations, rôles, quote-parts, vue consolidée multi-biens | À faire |
+| 6 · Partage | Invitations, rôles, quote-parts, vue consolidée multi-biens | **Livré** : la vue consolidée multi-biens reste à faire |
 | 7 · Exports | `.xlsx` avec hypothèses en feuille séparée, PDF de synthèse | À faire |
 | 8 · Finitions | Hors-ligne, anglais complet, accessibilité, budget de perf mobile | À faire |
 

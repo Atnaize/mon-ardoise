@@ -34,6 +34,12 @@ Bien, prêts, baux et lignes se créent, se modifient et se suppriment. Les
 formulaires de création et d'édition partagent les mêmes composants de champs :
 un champ ajouté dans `src/components/fields/` apparaît des deux côtés.
 
+**Lot 6 · Partage (livré, sauf la vue consolidée).** Un bien s'ouvre à une autre
+personne par un code d'invitation : le lien se copie et se transmet à la main, il
+n'y a aucun e-mail sortant. Trois rôles, appliqués partout (un lecteur ne voit plus les commandes
+de saisie), et les deux quote-parts du schéma se saisissent enfin. Le rôle donne
+l'accès, la quote-part répartit l'argent : ce sont deux réglages distincts.
+
 **Ce qui n'y est pas encore :** l'UI des assurances et des remboursements
 anticipés (le schéma et le moteur les portent déjà), la confirmation avant
 suppression, les graphiques du lot 3, les scénarios du lot 4, et le suivi du réel

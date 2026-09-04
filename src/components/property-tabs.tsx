@@ -15,10 +15,13 @@ import { cn } from "@/lib/cn";
 export function PropertyTabs({
   propertyId,
   hasLease,
+  role,
 }: {
   propertyId: string;
   /** Sans bail, l'ardoise n'a rien à montrer : l'onglet reste visible mais inerte. */
   hasLease: boolean;
+  /** Un lecteur voit le bien sans pouvoir le régler. */
+  role: "owner" | "editor" | "viewer";
 }) {
   const t = useTranslations("property");
   const pathname = usePathname();
@@ -32,7 +35,12 @@ export function PropertyTabs({
       disabled: !hasLease,
       why: t("tabRentDisabled"),
     },
-    { href: `${base}/edit`, label: t("tabEdit"), disabled: false, why: undefined },
+    {
+      href: `${base}/edit`,
+      label: t("tabEdit"),
+      disabled: role === "viewer",
+      why: t("tabEditDisabled"),
+    },
   ];
 
   return (

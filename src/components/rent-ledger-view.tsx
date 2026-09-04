@@ -23,12 +23,15 @@ export async function RentLedgerView({
   leaseId,
   locale,
   today,
+  canEdit,
 }: {
   ledger: RentLedger;
   propertyId: string;
   leaseId: string | null;
   locale: string;
   today: string;
+  /** Un lecteur voit l'ardoise sans pouvoir pointer un versement. */
+  canEdit: boolean;
 }) {
   const t = await getTranslations("rent");
 
@@ -74,28 +77,32 @@ export async function RentLedgerView({
                         {money(payment.amount, locale)} · {payment.date}
                       </span>
                       <div className="flex items-center gap-2">
-                        <RentPaymentForm
-                          propertyId={propertyId}
-                          entryId={payment.id}
-                          dueMonth={row.month}
-                          leaseId={leaseId}
-                          suggestedAmount={String(centsToEuros(payment.amount))}
-                          today={payment.date}
-                          locale={locale}
-                          label={t("editPayment")}
-                        />
-                        <DeleteForm
-                          action={deleteRentPaymentAction.bind(null, propertyId, payment.id)}
-                          locale={locale}
-                          label={t("deletePayment")}
-                        />
+                        {canEdit ? (
+                          <>
+                            <RentPaymentForm
+                              propertyId={propertyId}
+                              entryId={payment.id}
+                              dueMonth={row.month}
+                              leaseId={leaseId}
+                              suggestedAmount={String(centsToEuros(payment.amount))}
+                              today={payment.date}
+                              locale={locale}
+                              label={t("editPayment")}
+                            />
+                            <DeleteForm
+                              action={deleteRentPaymentAction.bind(null, propertyId, payment.id)}
+                              locale={locale}
+                              label={t("deletePayment")}
+                            />
+                          </>
+                        ) : null}
                       </div>
                     </li>
                   ))}
                 </ul>
               ) : null}
 
-              {row.balance > 0 ? (
+              {canEdit && row.balance > 0 ? (
                 <div className="flex border-t border-line-soft pt-2.5">
                   <RentPaymentForm
                     propertyId={propertyId}
