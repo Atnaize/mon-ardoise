@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { landmarksOf } from "@/components/timeline";
+import { groupByYear, landmarksOf } from "@/components/timeline";
 import { eurosToCents } from "@/engine/money";
 import { fromIsoDate, yearOf } from "@/engine/month";
 import { project } from "@/engine/projection";
@@ -68,5 +68,59 @@ describe("landmarksOf · le prêt soldé", () => {
     expect(landmarks.firstDebt).toBe(null);
     expect(landmarks.paidOff).toBe(null);
     expect(landmarks.lastInstalment).toBe(null);
+  });
+});
+
+describe("groupByYear · « si tu vends » ne se pose qu'au présent", () => {
+  // La projection démarre à l'acquisition, donc trois ans avant le mois de
+  // référence : les deux premières années sont révolues.
+  const NOW = fromIsoDate("2029-07-01");
+  const rows = groupByYear(project(input()), landmarksOf(project(input()), NOW));
+
+  it("marque révolues les années antérieures à l'année en cours", () => {
+    const past = rows.filter((row) => row.past).map((row) => row.year);
+
+    expect(past).toEqual([2026, 2027, 2028]);
+  });
+
+  it("ne marque pas révolue l'année en cours, dont le solde est celui de décembre", () => {
+    const current = rows.find((row) => row.year === 2029)!;
+
+    expect(current.past).toBe(false);
+    expect(current.current).toBe(true);
+  });
+
+  it("ne marque révolu aucun exercice à venir", () => {
+    expect(rows.filter((row) => row.year > 2029).every((row) => !row.past)).toBe(true);
+  });
+
+  it("coupe au mois, pas à l'année, dans l'année en cours", () => {
+    const months = rows.find((row) => row.year === 2029)!.months;
+
+    expect(months.filter((month) => month.past).map((month) => month.month)).toEqual([
+      fromIsoDate("2029-01-01"),
+      fromIsoDate("2029-02-01"),
+      fromIsoDate("2029-03-01"),
+      fromIsoDate("2029-04-01"),
+      fromIsoDate("2029-05-01"),
+      fromIsoDate("2029-06-01"),
+    ]);
+  });
+
+  it("compte le mois de référence dans le présent, pas dans le passé", () => {
+    const july = rows
+      .flatMap((row) => row.months)
+      .find((month) => month.month === NOW)!;
+
+    expect(july.past).toBe(false);
+  });
+
+  it("laisse le cumul et le capital restant dû sur les années révolues", () => {
+    // Seule la question de la revente perd son sens : ce qui a été dépensé et ce
+    // qui reste dû sont des faits.
+    const past = rows.find((row) => row.year === 2027)!;
+
+    expect(past.cumulative).not.toBe(0);
+    expect(past.outstanding).toBeGreaterThan(0);
   });
 });

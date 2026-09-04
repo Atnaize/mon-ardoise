@@ -15,6 +15,13 @@ export interface TimelineRow {
   netPosition: Cents;
   /** Solde nul parce que le prêt est éteint, et non parce qu'il n'a pas commencé. */
   settled: boolean;
+  /**
+   * Révolu. « Si tu vends » est une question posée au présent : sur une échéance
+   * passée, elle n'a plus de réponse, et un montant y ferait croire à une option
+   * qu'on n'a plus. Le cumul et le capital restant dû, eux, sont des faits et
+   * restent affichés.
+   */
+  past: boolean;
 }
 
 export interface MonthRow extends TimelineRow {
@@ -144,7 +151,11 @@ export function TimelineTable({ rows, locale }: { rows: YearRow[]; locale: strin
                     : money(row.outstanding, locale)}
                 </Td>
                 <Td numeric className="pr-0 text-sm font-medium">
-                  <Amount cents={row.netPosition} locale={locale} />
+                  {row.past ? (
+                    <span className="font-normal text-ink-3">-</span>
+                  ) : (
+                    <Amount cents={row.netPosition} locale={locale} />
+                  )}
                 </Td>
               </tr>
 
@@ -177,7 +188,11 @@ export function TimelineTable({ rows, locale }: { rows: YearRow[]; locale: strin
                           : money(month.outstanding, locale)}
                       </Td>
                       <Td numeric className="border-t-transparent py-1 pr-0 text-xs">
-                        <Amount cents={month.netPosition} locale={locale} />
+                        {month.past ? (
+                          <span className="text-ink-3">-</span>
+                        ) : (
+                          <Amount cents={month.netPosition} locale={locale} />
+                        )}
                       </Td>
                     </tr>
                   ))

@@ -13,6 +13,8 @@ interface Landmarks {
   /** Premier mois où une dette existe : avant lui, un solde nul ne dit rien. */
   firstDebt: number | null;
   currentYear: number;
+  /** Le présent, au mois : c'est lui qui sépare ce qui s'est produit de ce qu'on projette. */
+  referenceMonth: number;
 }
 
 export function landmarksOf(
@@ -37,6 +39,7 @@ export function landmarksOf(
     lastInstalment: paying?.month ?? null,
     firstDebt: borrowed < 0 ? null : projection[borrowed].month,
     currentYear: yearOf(referenceMonth),
+    referenceMonth,
   };
 }
 
@@ -46,7 +49,7 @@ export function landmarksOf(
  * un solde ne se totalise pas, donc les mois affichés ne peuvent plus contredire
  * l'année par accumulation d'arrondis.
  */
-function groupByYear(
+export function groupByYear(
   projection: readonly MonthlyProjection[],
   landmarks: Landmarks,
 ): YearRow[] {
@@ -63,6 +66,7 @@ function groupByYear(
         aheadFrom: year === landmarks.aheadFrom,
         paidOff: year === landmarks.paidOff,
         current: year === landmarks.currentYear,
+        past: year < landmarks.currentYear,
         cumulative: 0,
         outstanding: 0,
         netPosition: 0,
@@ -82,6 +86,7 @@ function groupByYear(
       netPosition: row.netPosition,
       settled,
       lastInstalment: row.month === landmarks.lastInstalment,
+      past: row.month < landmarks.referenceMonth,
     });
 
     // Des soldes à une date : ceux du dernier mois de l'année, jamais une somme.
