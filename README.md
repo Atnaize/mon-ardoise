@@ -1,6 +1,6 @@
 # Mon Ardoise
 
-Prévision des coûts et des rentrées de biens immobiliers — Wallonie, bailleur
+Prévision des coûts et des rentrées de biens immobiliers en Wallonie, bailleur
 particulier. Deux biens au départ : une maison mise en location, une maison
 occupée avec un projet d'extension. Un bien n'a donc pas forcément de revenu.
 
@@ -10,22 +10,22 @@ occupée avec un projet d'extension. Un bien n'a donc pas forcément de revenu.
 
 ## État
 
-**Lot 0 · Fondations — livré.** Connexion Google, base Postgres avec les 15 tables,
+**Lot 0 · Fondations (livré).** Connexion Google, base Postgres avec les 15 tables,
 français et anglais, application installable, socle du moteur de calcul sous tests,
 CI bloquante.
 
-**Lot 1 · Moteur de calcul — livré.** Tableau d'amortissement complet (annuités
+**Lot 1 · Moteur de calcul (livré).** Tableau d'amortissement complet (annuités
 ou capital constant, différé partiel ou total, assurances dans les quatre modes,
 remboursements anticipés avec les quatre régimes d'indemnité, périodes de taux
 multiples), dépliage des récurrences et de l'indexation, série de loyers,
 projection mensuelle, dix-huit indicateurs, comparaison de scénarios.
 114 tests, dont la calibration sur le tableau BNP réel.
 
-**Lot 2 · Saisie — livré.** Adaptateur base → `ProjectionInput`, création d'un bien
+**Lot 2 · Saisie (livré).** Adaptateur base → `ProjectionInput`, création d'un bien
 avec son prêt et son bail, ajout et suppression des lignes de frais et de revenus,
 écran de synthèse avec les douze indicateurs, timeline mensuelle et vue annuelle.
 
-**Lot 5 · L'ardoise — livré.** Encodage des loyers reçus mois par mois, avec
+**Lot 5 · L'ardoise (livré).** Encodage des loyers reçus mois par mois, avec
 statut par échéance (payé, partiel, impayé, trop-perçu, à venir), total dû par le
 locataire, et alerte de retard sur la fiche du bien comme sur la liste. C'est ce
 qui donne son nom à l'app.
@@ -34,7 +34,7 @@ Bien, prêts, baux et lignes se créent, se modifient et se suppriment. Les
 formulaires de création et d'édition partagent les mêmes composants de champs :
 un champ ajouté dans `src/components/fields/` apparaît des deux côtés.
 
-**Ce qui n'y est pas encore** — l'UI des assurances et des remboursements
+**Ce qui n'y est pas encore :** l'UI des assurances et des remboursements
 anticipés (le schéma et le moteur les portent déjà), la confirmation avant
 suppression, les graphiques du lot 3, les scénarios du lot 4, et le suivi du réel
 sur les *frais* (seuls les loyers sont pointés).
@@ -50,7 +50,7 @@ npm run dev
 ```
 
 La base tourne en local par défaut. Pour travailler contre Neon, commente la
-ligne `DATABASE_URL` locale de `.env.local` et décommente celle de Neon — c'est
+ligne `DATABASE_URL` locale de `.env.local` et décommente celle de Neon : c'est
 le même driver des deux côtés, il n'y a rien d'autre à changer.
 
 ### Les quatre valeurs à remplir
@@ -82,9 +82,9 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 
 ## Conventions non négociables
 
-1. **Le moteur de calcul est une bibliothèque pure** — `src/engine/`, sans React,
+1. **Le moteur de calcul est une bibliothèque pure** : `src/engine/`, sans React,
    sans base, sans réseau. Écrit et testé avant tout écran qui l'utilise.
-2. **Prévisionnel et réel constaté sont séparés** — `flow_line` d'un côté,
+2. **Prévisionnel et réel constaté sont séparés** : `flow_line` d'un côté,
    `actual_entry` de l'autre, rapprochés par `flow_line_id`.
 3. **Chaque frais et chaque revenu est une ligne datée** avec une règle de
    périodicité. Ajouter un type de frais ne doit jamais demander de migration.
@@ -98,8 +98,8 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
    rappelle l'hypothèse retenue sous le chiffre qu'elle produit.
 7. **La conversion du taux annuel en taux mensuel est un paramètre du contrat,
    pas une règle universelle.** Deux conventions existent : l'équivalence
-   `(1 + i)^(1/12) − 1` et le douzième `i / 12`. L'écart n'est pas cosmétique —
-   sur 200 000 € à 3,5 % sur 20 ans il vaut 1 353,60 € de coût total — donc le
+   `(1 + i)^(1/12) − 1` et le douzième `i / 12`. L'écart n'est pas cosmétique :
+   sur 200 000 € à 3,5 % sur 20 ans il vaut 1 353,60 € de coût total, donc le
    champ `rate_basis` porte les deux et **il faut le lire sur le tableau de la
    banque, jamais le supposer**.
 
@@ -132,7 +132,7 @@ Tout ce qui touche à l'apparence est concentré pour pouvoir être jeté :
 
 | Où | Quoi |
 | --- | --- |
-| `src/app/globals.css` | **tous** les tokens — couleurs des deux thèmes, rayon d'angle, familles de police. Aucun hex ailleurs dans le code |
+| `src/app/globals.css` | **tous** les tokens : couleurs des deux thèmes, rayon d'angle, familles de police. Aucun hex ailleurs dans le code |
 | `src/components/ui/` | les primitives : `Button` `Card` `Field` `Input` `Select` `Checkbox` `Stat` `Table` `Badge` |
 | `src/components/fields/` | les groupes de champs, partagés entre création et édition |
 | `src/components/forms/` | les formulaires, qui n'assemblent que des champs et `InlineForm` |
@@ -155,7 +155,7 @@ base  →  src/server/properties.ts   requêtes filtrées par appartenance
 Aucune fonction de `src/server/properties.ts` n'existe sans un `userId` en
 premier paramètre, et le module n'exporte jamais le handle de base. L'écriture
 passe par `src/server/actions.ts`, qui valide avec les schémas Zod de
-`src/lib/schemas.ts` — les mêmes que le client — puis vérifie le rôle avant
+`src/lib/schemas.ts` (les mêmes que le client), puis vérifie le rôle avant
 d'écrire.
 
 ## Stack
@@ -178,7 +178,7 @@ Deux écarts assumés par rapport au cadrage initial, décidés après vérifica
 
 - `next typegen` doit tourner avant `tsc` : Next 16 génère les types de routes
   (`PageProps<"/[locale]">`, `LayoutProps<…>`) dans `.next/types`.
-- Le routage par locale vit dans `src/proxy.ts` — Next 16 a renommé
+- Le routage par locale vit dans `src/proxy.ts` : Next 16 a renommé
   `middleware.ts` en `proxy.ts`.
 - `npm audit` signale un CVE esbuild via `drizzle-kit` → `@esbuild-kit/esm-loader`.
   L'advisory concerne le serveur de développement d'esbuild, que drizzle-kit
@@ -189,7 +189,7 @@ Deux écarts assumés par rapport au cadrage initial, décidés après vérifica
   donc impossible de développer contre un Postgres local, et ses transactions
   n'ont pas la même sémantique que les transactions interactives. Le coût du
   changement est environ 200 ms de handshake TCP au démarrage à froid sur
-  Vercel — négligeable ici, contre une divergence dev/prod supprimée.
+  Vercel : négligeable ici, contre une divergence dev/prod supprimée.
 - Le Postgres local est en 16 et Neon en 18.6. Le schéma n'utilise rien de
   spécifique à une version ; si une divergence apparaît un jour, changer le tag
   dans `docker-compose.yml` suffit.

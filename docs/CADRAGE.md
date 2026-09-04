@@ -1,11 +1,11 @@
-# Mon Ardoise — document de cadrage
+# Mon Ardoise : document de cadrage
 
 v2 · 2 septembre 2026 · lot 0 livré
 
 | | |
 | --- | --- |
 | Région | Wallonie |
-| Régime | bailleur particulier — RC indexé × 1,4 |
+| Régime | bailleur particulier, RC indexé × 1,4 |
 | Horizon | 20 ans, paramétrable |
 | Hébergement | Vercel Hobby, 0 €/mois |
 | Base | Neon Postgres |
@@ -17,12 +17,12 @@ v2 · 2 septembre 2026 · lot 0 livré
 
 Deux biens, et ils ne se ressemblent pas.
 
-**Bien A — la maison de ta compagne.** Mise en location longue durée, bail 1 an
+**Bien A : la maison de ta compagne.** Mise en location longue durée, bail 1 an
 puis 3-6-9. Prêt en cours, loyer entrant, précompte immobilier qui va augmenter.
 C'est le cas nominal de l'app. Partagé entre vous deux.
 
-**Bien B — ta maison.** Résidence principale, aucun loyer. Prêt en cours, et un
-projet d'extension financé à deux — donc un second prêt et une vague de frais de
+**Bien B : ta maison.** Résidence principale, aucun loyer. Prêt en cours, et un
+projet d'extension financé à deux, donc un second prêt et une vague de frais de
 travaux. Ça n'a aucun revenu, mais ça consomme de la trésorerie.
 
 ### Trois conséquences sur le modèle
@@ -35,8 +35,8 @@ pas, au lieu d'afficher un « 0 % » trompeur.
 **Il faut une quote-part dès la première migration.** Si l'extension est financée
 à deux, l'app dira « ce bien coûte 1 400 €/mois » alors que ton effort réel est de
 700 €. Sans quote-part, tous tes chiffres personnels sont faux d'un facteur deux.
-Les deux champs sont dans le schéma depuis le lot 0 — `ownership_share_permille`
-et `contribution_share_permille` — l'UI qui les expose arrive au lot 6. Le
+Les deux champs sont dans le schéma depuis le lot 0 (`ownership_share_permille`
+et `contribution_share_permille`) ; l'UI qui les expose arrive au lot 6. Le
 stockage est gratuit, la migration rétroactive ne l'est pas.
 
 **« Partager » et « posséder » sont deux notions distinctes.** Un ami à qui tu
@@ -73,7 +73,7 @@ est le piège classique de ce genre d'app.
 
 ---
 
-## 3. Fiscalité V1 — Wallonie, bailleur particulier
+## 3. Fiscalité V1 : Wallonie, bailleur particulier
 
 Tu loues à un **particulier** qui ne déduit pas le loyer. Tu n'es donc pas imposé
 sur les loyers perçus, mais sur le **revenu cadastral indexé majoré de 40 %**,
@@ -83,7 +83,7 @@ compris.
 Conséquence contre-intuitive que l'app doit afficher, parce qu'elle change les
 décisions : **ton impôt ne dépend pas du loyer que tu demandes.** Passer de 950 à
 1 050 € augmente ton net de 100 € et ton impôt de zéro. À l'inverse, un mois de
-vacance coûte le loyer entier — l'impôt, lui, continue de courir.
+vacance coûte le loyer entier, et l'impôt, lui, continue de courir.
 
 Le **précompte immobilier va augmenter** sur le bien loué : les réductions liées
 à l'habitation propre tombent. C'est une ligne de frais annuelle comme une autre,
@@ -115,13 +115,13 @@ Contrainte dure : zéro euro par mois.
 | Couche | Choix | Pourquoi |
 | --- | --- | --- |
 | Framework | Next.js 16, App Router | Chemin natif Vercel, Turbopack par défaut. Deux changements de la 16 qui comptent : `middleware.ts` est renommé `proxy.ts`, et `next typegen` génère les types de routes que `tsc` attend. |
-| Base | Neon Postgres | Free tier sans réactivation manuelle : le compute descend à zéro après quelques minutes et se réveille en moins d'une seconde. Supabase met ses projets gratuits en pause après une semaine sans trafic — rédhibitoire pour une app ouverte une fois par mois. Bonus : une branche de base par preview deploy. |
+| Base | Neon Postgres | Free tier sans réactivation manuelle : le compute descend à zéro après quelques minutes et se réveille en moins d'une seconde. Supabase met ses projets gratuits en pause après une semaine sans trafic, rédhibitoire pour une app ouverte une fois par mois. Bonus : une branche de base par preview deploy. |
 | ORM | Drizzle | Schéma en TypeScript, migrations SQL versionnées et relisibles. Driver HTTP Neon : pas de pool à épuiser en serverless. |
 | Auth | better-auth, Google | Auth.js v5 est encore en beta après deux ans. better-auth est en 1.x stable, a un adaptateur Drizzle officiel, et fournit des plugins d'organisation et d'invitation utiles au lot 6. Aucune infrastructure e-mail. |
 | UI | Tailwind 4 | Mobile-first par défaut. shadcn/ui s'ajoutera au lot 2, quand il y aura de vrais formulaires. |
 | i18n | next-intl | Routing `/fr` et `/en`, fr par défaut. Formats de dates et de montants localisés. |
 | Graphiques | Recharts | À installer au lot 3. Suffisant pour aires empilées, courbes cumulées et barres, lisible sur téléphone. |
-| PWA | Manifest natif Next | Next 16 génère le manifest depuis `src/app/manifest.ts`, ce qui suffit à l'installation sur écran d'accueil. Un service worker greffé sur le bundler est la dépendance à éviter avec Turbopack — le cache hors-ligne attend le lot 8. |
+| PWA | Manifest natif Next | Next 16 génère le manifest depuis `src/app/manifest.ts`, ce qui suffit à l'installation sur écran d'accueil. Un service worker greffé sur le bundler est la dépendance à éviter avec Turbopack : le cache hors-ligne attend le lot 8. |
 | Exports | ExcelJS + react-pdf | À installer au lot 7. |
 | Validation | Zod | Un schéma par formulaire, partagé client et Server Action. |
 | Tests | Vitest, puis Playwright | Vitest sur le moteur, là où sont les vrais risques. Playwright sur deux ou trois parcours seulement. |
@@ -140,11 +140,11 @@ chaîne pour éviter les décalages de fuseau.
 | `property` | le bien | `status` (preparing / rented / occupied), `cadastral_income`, `estimated_tax_yearly`, `horizon_years` |
 | `property_member` | accès **et** quote-part | `role`, `ownership_share_permille`, `contribution_share_permille` |
 | `invitation` | partage d'un bien | `email` ou `code`, `role`, `expires_at` |
-| `loan` | un par crédit — le prêt hypothécaire et le mandat sont deux lignes | `principal`, `term_months`, `amortization`, `deferral_months`, `deferral_type` |
+| `loan` | un par crédit : le prêt hypothécaire et le mandat sont deux lignes | `principal`, `term_months`, `amortization`, `deferral_months`, `deferral_type` |
 | `loan_rate_period` | une ligne si taux fixe | `start_month`, `annual_rate_ppm`, `rate_basis` (défaut `nominal_12`) |
 | `loan_insurance` | ASRD, incendie, autre | `premium_mode` (dans la mensualité / annuelle / trimestrielle / unique financée) |
 | `loan_prepayment` | remboursement anticipé | `penalty_mode`, `penalty_value` (défaut 3 mois), `effect` |
-| `flow_line` | tout frais, tout revenu — y compris l'impôt | `recurrence`, `is_acquisition_cost`, `indexation_rate_ppm`, `capitalize`, `amortization_years` |
+| `flow_line` | tout frais, tout revenu, y compris l'impôt | `recurrence`, `is_acquisition_cost`, `indexation_rate_ppm`, `capitalize`, `amortization_years` |
 | `lease` | bail 1 an puis 3-6-9 | `monthly_rent` hors charges, `indexation_rate_ppm` |
 | `scenario` | comparaison côte à côte | `is_baseline`, `overrides` (jsonb) |
 | `actual_entry` | le réel constaté | `lease_id` et `due_month` pour pointer un loyer sur son échéance, `flow_line_id` pour le rapprochement des frais |
@@ -187,7 +187,7 @@ douzième :     i_mensuel = i_annuel / 12
 ```
 
 L'écart n'est pas cosmétique : sur 200 000 € à 3,5 % sur 20 ans il vaut
-**1 353,60 € de coût total** et 5,64 € sur la mensualité — 1 154,28 € contre
+**1 353,60 € de coût total** et 5,64 € sur la mensualité : 1 154,28 € contre
 1 159,92 €. Chiffres produits par le moteur, pas estimés.
 
 **Correction de la v1 de ce document**, qui affirmait que l'équivalence était *la*
@@ -204,7 +204,7 @@ exactement.
 
 ### Calibration sur le tableau réel
 
-Deux prêts sur le même bien, tous deux à 3,06 % sur 241 mois — un prêt
+Deux prêts sur le même bien, tous deux à 3,06 % sur 241 mois, un prêt
 hypothécaire et un mandat hypothécaire :
 
 | | Capital | Mensualité | Intérêts du 1er mois | Intérêts totaux |
@@ -228,12 +228,12 @@ tolérances.
 Mobile-first au sens fort : la vue par défaut est celle qu'on consulte debout
 dans une cuisine, pas un tableau de 240 lignes.
 
-- **Parcours d'entrée** — un assistant en trois étapes (le bien, le prêt, le
+- **Parcours d'entrée** : un assistant en trois étapes (le bien, le prêt, le
   loyer visé) qui produit un premier verdict chiffré avant toute saisie de frais.
-- **Écran du bien** — huit onglets : Synthèse, Prêts, Frais, Bail, Timeline,
+- **Écran du bien**, huit onglets : Synthèse, Prêts, Frais, Bail, Timeline,
   Scénarios, Réel vs prévu, Partage. Barre d'onglets défilante sur mobile, rail
   latéral sur desktop.
-- **Timeline** — liste par mois avec montant net et cumul sur mobile, tableau
+- **Timeline** : liste par mois avec montant net et cumul sur mobile, tableau
   dense et vue annuelle sur desktop. Les deux lisent la même projection.
 
 ### Indicateurs
@@ -244,7 +244,7 @@ dans une cuisine, pas un tableau de 240 lignes.
 | Cash-flow net mensuel | Loyer − charges − mensualité |
 | Point d'équilibre | Le mois où le cumul repasse positif, et le total à financer avant d'y arriver |
 | Rendement brut | Loyer annuel ÷ prix d'acquisition frais compris |
-| Rendement net | Après charges récurrentes uniquement — un rendement se mesure sur une année stabilisée, donc les frais ponctuels en sont exclus |
+| Rendement net | Après charges récurrentes uniquement : un rendement se mesure sur une année stabilisée, donc les frais ponctuels en sont exclus |
 | Cash-on-cash | Cash-flow annuel ÷ apport réellement immobilisé |
 | Coût total du crédit | Intérêts + assurances + indemnités de remploi, sur toute la durée |
 | Capital restant dû | Mois par mois, avec l'effet des remboursements anticipés |
@@ -263,11 +263,11 @@ chiffres faux.
 | Lot | Contenu | État |
 | --- | --- | --- |
 | **0 · Fondations** | Repo, Next 16 + TS strict, Tailwind 4, Neon + Drizzle, better-auth Google, next-intl fr/en, manifest PWA, CI bloquante | **Livré** |
-| **1 · Moteur de calcul** | Tableau d'amortissement complet, différé, assurances, remboursements anticipés, récurrences, indexation, projection, indicateurs, comparaison. Aucune interface | **Livré** — 114 tests, calibré sur le tableau BNP |
-| 2 · Saisie | Adaptateur base → `ProjectionInput`, création bien + prêt + bail, lignes de frais et revenus, synthèse | **Livré** — édition après création encore à faire |
+| **1 · Moteur de calcul** | Tableau d'amortissement complet, différé, assurances, remboursements anticipés, récurrences, indexation, projection, indicateurs, comparaison. Aucune interface | **Livré** : 114 tests, calibré sur le tableau BNP |
+| 2 · Saisie | Adaptateur base → `ProjectionInput`, création bien + prêt + bail, lignes de frais et revenus, synthèse | **Livré** : édition après création encore à faire |
 | 3 · Restitution | Timeline et vue annuelle **livrées** au lot 2 ; restent les graphiques Recharts | **Suivant** |
 | 4 · Scénarios | Duplication, substitution d'hypothèses, comparaison côte à côte | À faire |
-| 5 · Réel vs prévu | Loyers : encodage mois par mois, statut par échéance, ardoise et alerte de retard | **Livré pour les loyers** — les frais réels restent à pointer |
+| 5 · Réel vs prévu | Loyers : encodage mois par mois, statut par échéance, ardoise et alerte de retard | **Livré pour les loyers** : les frais réels restent à pointer |
 | 6 · Partage | Invitations, rôles, quote-parts, vue consolidée multi-biens | À faire |
 | 7 · Exports | `.xlsx` avec hypothèses en feuille séparée, PDF de synthèse | À faire |
 | 8 · Finitions | Hors-ligne, anglais complet, accessibilité, budget de perf mobile | À faire |
@@ -277,7 +277,7 @@ et icônes servis, build et lint propres.
 
 **Livré au lot 1 :** annuités et capital constant, différé partiel et total,
 assurances dans les quatre modes de prime, remboursements anticipés dans les
-quatre régimes d'indemnité et les deux effets, périodes de taux multiples — donc
+quatre régimes d'indemnité et les deux effets, périodes de taux multiples, donc
 le taux variable ne demande plus que de l'UI. Dépliage des récurrences avec
 indexation composée, étalement des frais capitalisés sans perte de centime,
 séries de loyers avec vacance, projection mensuelle, dix-huit indicateurs,
@@ -294,7 +294,7 @@ Le tableau d'amortissement a été fourni et sert de test de calibration. Il res
 à réunir, pour encoder le bien au lot 2 :
 
 1. **Revenu cadastral, précompte immobilier actuel, loyer visé.**
-2. **Le mode d'assurance** — ASRD et incendie, prime dans la mensualité,
+2. **Le mode d'assurance** : ASRD et incendie, prime dans la mensualité,
    annuelle, trimestrielle ou unique financée.
 
 Deux points relevés dans le contrat BNP et volontairement hors périmètre :
