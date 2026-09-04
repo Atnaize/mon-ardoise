@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
 import { CostBreakdown } from "@/components/cost-breakdown";
-import { DeleteForm } from "@/components/forms/delete-form";
+import { ConfirmForm } from "@/components/forms/confirm-form";
 import { FlowLineForm } from "@/components/forms/flow-line-form";
 import { LeaseForm } from "@/components/forms/lease-form";
 import { LoanForm } from "@/components/forms/loan-form";
@@ -24,6 +24,7 @@ import {
   deleteFlowLineAction,
   deleteLeaseAction,
   deleteLoanAction,
+  leavePropertyAction,
 } from "@/server/actions";
 import { roleOf } from "@/server/projection-input";
 import { loadProjection } from "@/server/properties";
@@ -60,9 +61,10 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
     projection.find((row) => row.month >= indicators.referenceMonth) ?? projection[0];
   const growthPpm = bundle.property.valueGrowthRatePpm;
   const now = todayIso();
+  const role = roleOf(bundle);
   // Un lecteur consulte : les déclencheurs d'ajout, de modification et de
   // suppression ne s'affichent pas plutôt que d'échouer à l'envoi.
-  const canEdit = roleOf(bundle) !== "viewer";
+  const canEdit = role !== "viewer";
 
   return (
     <AppShell>
@@ -70,7 +72,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
         name={bundle.property.name}
         propertyId={id}
         hasLease={bundle.leases.length > 0}
-        role={roleOf(bundle)}
+        role={role}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -233,7 +235,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                           rateBasis: ratePeriods[0]?.rateBasis,
                         }}
                       />
-                      <DeleteForm
+                      <ConfirmForm
                         action={deleteLoanAction.bind(null, id, loan.id)}
                         locale={locale}
                         label={t("summary.delete")}
@@ -278,7 +280,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                         label={t("summary.edit")}
                         defaults={entry}
                       />
-                      <DeleteForm
+                      <ConfirmForm
                         action={deleteLeaseAction.bind(null, id, entry.id)}
                         locale={locale}
                         label={t("summary.delete")}
@@ -345,7 +347,7 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
                         label={t("summary.edit")}
                         defaults={line}
                       />
-                      <DeleteForm
+                      <ConfirmForm
                         action={deleteFlowLineAction.bind(null, id, line.id)}
                         locale={locale}
                         label={t("summary.delete")}
@@ -366,6 +368,21 @@ export default async function PropertyPage({ params }: PageProps<"/[locale]/prop
           referenceMonth={indicators.referenceMonth}
         />
       </Section>
+
+      {/* Un propriétaire se retire depuis les réglages, où il voit les autres
+          membres et la place qu'il laisse. Un éditeur et un lecteur n'ont pas cet
+          écran : sans ce bouton, ils ne sortent pas d'un bien où ils ont été
+          invités par erreur. */}
+      {role === "owner" ? null : (
+        <Section title={t("members.leaveTitle")} hint={t("members.leaveHint")}>
+          <ConfirmForm
+            action={leavePropertyAction.bind(null, id)}
+            locale={locale}
+            label={t("members.leave")}
+            question={t("members.leaveQuestion", { name: bundle.property.name })}
+          />
+        </Section>
+      )}
     </AppShell>
   );
 }

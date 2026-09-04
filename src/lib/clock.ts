@@ -1,7 +1,11 @@
 import { fromIsoDate, type YearMonth } from "@/engine/month";
 
+export function isoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return isoDate(new Date());
 }
 
 export function currentMonth(): YearMonth {

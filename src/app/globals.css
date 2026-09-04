@@ -52,6 +52,12 @@
   --negative-wash: #f6ece9;
   --warning: #87611d;
   --ui-radius: 3px;
+  /* Teintes des halos, écrites en rgba plutôt qu'en mélange sur la palette :
+     le compilateur double alors chaque règle d'un repli, où la teinte part à
+     pleine saturation. Un repli plus voyant que le rendu voulu. */
+  --halo-accent: rgba(44, 99, 150, 0.13);
+  --halo-warm: rgba(135, 97, 29, 0.1);
+  --halo-rose: rgba(180, 68, 46, 0.08);
 }
 
 /*
@@ -81,6 +87,11 @@
   --positive-wash: #1f2a38;
   --negative-wash: #33231d;
   --warning: #dcb165;
+  /* Sur papier sombre, un halo doit éclairer et non teinter : mêmes teintes,
+     alpha plus haut, puisqu'elles s'ajoutent à une surface presque noire. */
+  --halo-accent: rgba(78, 147, 224, 0.16);
+  --halo-warm: rgba(220, 177, 101, 0.1);
+  --halo-rose: rgba(217, 101, 69, 0.1);
 }
 
 :root {
@@ -89,9 +100,71 @@
   color-scheme: light;
 }
 
-body {
+/*
+ * Le papier est peint sur `html`, pas sur `body` : sa couleur se propage au canvas,
+ * donc elle reste sous les halos que `body::before/after` posent en z-index négatif.
+ * Avec le fond sur `body`, ces halos passaient derrière lui et ne se voyaient plus.
+ */
+html {
   background: var(--ground);
+}
+
+body {
   color: var(--ink);
+}
+
+/*
+ * Deux halos qui dérivent lentement derrière le papier. Ils ne sont pas là pour
+ * décorer : le papier uni se lit comme une page vide tant que rien n'y bouge, et
+ * ces taches lui donnent l'épaisseur d'une surface éclairée. D'où le réglage :
+ * teintes de la palette (accent, ocre, rouge) à moins de 15 % d'alpha, périodes
+ * longues et décalées pour qu'aucun cycle ne soit repérable, et `fixed` pour que
+ * le défilement ne les entraîne pas.
+ */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  /* Débordement franc : les centres des gradients sortent du cadre, sinon on voit
+     les bords du calque passer pendant la dérive. */
+  inset: -35%;
+  will-change: transform;
+}
+
+body::before {
+  background:
+    radial-gradient(closest-side circle at 22% 28%, var(--halo-accent), transparent),
+    radial-gradient(closest-side circle at 74% 18%, var(--halo-warm), transparent);
+  animation: halo-drift-a 41s ease-in-out infinite alternate;
+}
+
+body::after {
+  background:
+    radial-gradient(closest-side circle at 78% 76%, var(--halo-rose), transparent),
+    radial-gradient(closest-side circle at 30% 82%, var(--halo-accent), transparent);
+  animation: halo-drift-b 53s ease-in-out infinite alternate;
+}
+
+/* Uniquement `transform` : composité par le GPU, donc la dérive ne repeint ni ne
+   recalcule quoi que ce soit pendant qu'on lit un tableau. */
+@keyframes halo-drift-a {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+  }
+}
+
+@keyframes halo-drift-b {
+  from {
+    transform: translate3d(3%, 2%, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(-4%, -3%, 0) scale(1);
+  }
 }
 
 *:focus-visible {
@@ -106,5 +179,13 @@ body {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+
+  /* La règle ci-dessus ne raccourcit pas la dérive, elle la saute : les halos
+     apparaîtraient d'un coup à leur position finale. On les laisse à l'arrêt. */
+  body::before,
+  body::after {
+    animation: none !important;
+    transform: none;
   }
 }

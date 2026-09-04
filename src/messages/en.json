@@ -63,7 +63,8 @@
     "tabsLabel": "Property views",
     "backToList": "My properties",
     "tabRentDisabled": "No lease on this property: nothing is expected, so nothing to tick off.",
-    "tabEditDisabled": "Read only: only editors can change the settings."
+    "tabEditDisabled": "Read only: only editors can change the settings.",
+    "deleteQuestion": "Delete {name} and everything in it?"
   },
   "members": {
     "title": "Members",
@@ -97,7 +98,11 @@
     "expiresOn": "expires {date}",
     "copy": "Copy link",
     "copied": "Link copied",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "leave": "Leave",
+    "leaveTitle": "Leave this property",
+    "leaveHint": "You will lose access to it. An owner can invite you again.",
+    "leaveQuestion": "Leave {name}?"
   },
   "join": {
     "title": "Invitation",
@@ -261,7 +266,8 @@
     "cancel": "Cancel",
     "save": "Save",
     "back": "Back to properties",
-    "invalid": "Incomplete form: fix the highlighted fields."
+    "invalid": "Incomplete form: fix the highlighted fields.",
+    "irreversible": "There is no undo."
   },
   "rent": {
     "title": "The tab",
@@ -294,5 +300,13 @@
     "advance": "Paid in advance",
     "advanceHint": "Received for future months · {total} received in total",
     "none": "No lease"
+  },
+  "reminder": {
+    "subjectOne": "Rent overdue on {property}",
+    "subjectMany": "Rent overdue on {count} properties",
+    "greeting": "Hello {name},",
+    "intro": "{count, plural, one {An expected rent has not arrived.} other {Expected rents have not arrived.}}",
+    "line": "{property}: {amount} due, {count, plural, one {# month overdue} other {# months overdue}}, since {since}.",
+    "footer": "{count, plural, one {You are getting this because you follow this property on Mon Ardoise.} other {You are getting this because you follow these properties on Mon Ardoise.}} The reminder comes back once a week until the slate is clear."
   }
 }

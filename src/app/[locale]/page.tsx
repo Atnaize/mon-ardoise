@@ -56,7 +56,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         </Card>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
-          {properties.map(({ bundle, indicators, outstandingRent, overdueCount }) => (
+          {properties.map(({ bundle, indicators, ledger }) => (
             <li key={bundle.property.id}>
               <Link
                 href={`/properties/${bundle.property.id}`}
@@ -84,15 +84,15 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
                       className={`text-sm tabular-nums ${
                         bundle.leases.length === 0
                           ? "text-ink-3"
-                          : outstandingRent > 0
+                          : ledger.outstanding > 0
                             ? "font-medium text-negative"
                             : "text-positive"
                       }`}
                     >
                       {bundle.leases.length === 0
                         ? t("rent.none")
-                        : outstandingRent > 0
-                          ? `${money(outstandingRent, locale)} · ${t("rent.overdue", { count: overdueCount })}`
+                        : ledger.outstanding > 0
+                          ? `${money(ledger.outstanding, locale)} · ${t("rent.overdue", { count: ledger.overdueMonths.length })}`
                           : t("rent.clear")}
                     </dd>
                   </div>

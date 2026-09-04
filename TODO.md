@@ -20,17 +20,18 @@ abandonné avec Eric.
 
 ## Décidé en cours de route
 
-- Le **taux marginal d'imposition** est retiré du schéma et du formulaire. Il
-  était saisi et stocké sans qu'aucun calcul ne le lise : ni le moteur, ni un
+- Le **taux marginal d'imposition** est retiré du formulaire et de l'interface.
+  Il était saisi et stocké sans qu'aucun calcul ne le lise : ni le moteur, ni un
   calculateur assisté. Il revient avec son premier consommateur réel, le
-  rendement net-net.
-- La **catégorie d'une ligne de frais ou de revenus** est retirée du schéma et du
-  formulaire. Texte libre obligatoire, elle était saisie, stockée et transportée
-  jusqu'au moteur sans que rien ne la lise : ni agrégation, ni filtre, ni
-  affichage. Elle revient avec son premier consommateur réel (la répartition par
-  poste dans la synthèse, ou le calcul fiscal), et ce sera alors une liste fermée,
-  pas un champ libre. `actual_entry.category` reste : elle sert à repérer les
-  loyers, et c'est le code qui l'écrit.
+  rendement net-net. La colonne, elle, reste en base (voir les champs dormants).
+- La **catégorie d'une ligne de frais ou de revenus** est retirée du formulaire
+  et de l'interface. Texte libre obligatoire, elle était saisie, stockée et
+  transportée jusqu'au moteur sans que rien ne la lise : ni agrégation, ni
+  filtre, ni affichage. Elle revient avec son premier consommateur réel (la
+  répartition par poste dans la synthèse, ou le calcul fiscal), et ce sera alors
+  une liste fermée, pas un champ libre. La colonne reste en base, nullable.
+  `actual_entry.category` reste écrite, elle : elle sert à repérer les loyers, et
+  c'est le code qui la remplit.
 - Le **précompte immobilier** est une simple ligne de frais récurrente, ajustée à la
   main après réception de l'avertissement-extrait de rôle. Pas de champ dédié
   « PI avant / après mise en location » : ça n'aurait servi qu'une fois.
@@ -64,8 +65,10 @@ abandonné avec Eric.
 - [x] ~~**Suppression d'un bien**~~ : zone dangereuse sur l'écran de modification.
 - [ ] **UI des assurances et des remboursements anticipés** : le schéma et le
       moteur les portent entièrement, il manque les formulaires.
-- [ ] **Confirmation avant suppression** : un clic suffit aujourd'hui à supprimer
-      un bien et tout ce qu'il contient. Ajouter une confirmation.
+- [x] ~~**Confirmation avant suppression**~~ : toute action sans retour arrière
+      passe par `ConfirmForm`, qui remplace le bouton par sa question. Le bien est
+      nommé dans la question : c'est ce qui distingue une confirmation d'un second
+      clic au même endroit.
 - [ ] **Périodes de taux multiples dans l'UI** : le formulaire de prêt ne gère que
       la période initiale ; le moteur en accepte autant qu'on veut.
 
@@ -73,12 +76,15 @@ abandonné avec Eric.
 
 - [x] ~~**Partage d'un bien**~~ : invitation par code, écran des membres, rôles
       appliqués, quote-parts de propriété et de contribution saisissables.
-- [ ] **Quitter un bien de soi-même** : seul un propriétaire retire un membre.
-      Un lecteur invité par erreur ne peut pas sortir tout seul.
-- [ ] **Invitation par e-mail** : il n'y a aucune infrastructure d'envoi, donc le
-      lien se copie et se transmet à la main. Le champ `invitation.email` sert
-      seulement à rendre l'invitation nominative. À reprendre avec Q31, qui
-      apporte l'e-mail pour les rappels de retard.
+- [x] ~~**Quitter un bien de soi-même**~~ : un éditeur et un lecteur trouvent
+      « Quitter ce bien » au bas de la synthèse. Un propriétaire se retire depuis
+      les réglages, où il voit la place qu'il laisse ; le dernier propriétaire ne
+      part pas, en écran comme en Server Action.
+- [ ] **Invitation par e-mail** : le lien se copie et se transmet encore à la
+      main, mais `src/lib/mail.ts` existe depuis le rappel de retard : il ne reste
+      que le message à écrire et l'envoi à brancher sur `createInvitationAction`.
+      Le champ `invitation.email` sert aujourd'hui seulement à rendre l'invitation
+      nominative.
 - [ ] **Le total des parts de propriété ne contraint rien** : il est affiché, et
       signalé quand il ne fait pas 100 %. Le forcer casserait l'état
       intermédiaire entre l'invitation envoyée et la part fixée.
@@ -95,21 +101,38 @@ abandonné avec Eric.
 - [ ] **Un versement qui couvre plusieurs mois** : aujourd'hui un versement
       désigne un seul mois d'échéance. Un virement de 2 400 € pour deux mois
       demande deux saisies.
-- [ ] **Rappel de retard** : l'ardoise est visible mais passive. Un cron
-      quotidien plus un e-mail la rendraient active (voir Q31).
+- [x] ~~**Rappel de retard**~~ : cron Vercel quotidien sur
+      `/api/cron/rent-reminders`, un e-mail par destinataire dans la langue de son
+      compte. Le mois courant n'est un retard qu'à partir du 10, et un rappel
+      identique attend une semaine (`src/lib/reminders.ts`).
+- [ ] **Pas d'opt-out sur les rappels** : quiconque est membre d'un bien avec un
+      loyer en retard reçoit l'e-mail. C'est tenable à deux ou trois ; il faudra
+      une colonne sur le compte et une case dans l'écran du compte avant d'ouvrir
+      l'app à quelqu'un d'autre.
 
-## Simplifications décidées en cours de route
+## Champs dormants
 
-Trois champs du bien ont été supprimés parce qu'ils n'alimentaient aucun calcul
-ou doublonnaient un mécanisme existant : `marginal_tax_rate_ppm`,
-`cadastral_income`, `estimated_tax_yearly`. L'impôt est une ligne de frais
-récurrente. Le rendement net-net a disparu avec eux : il dépendait d'une
+Six colonnes sont sorties de l'interface sans sortir de la base : elles existent,
+nullables et sans valeur par défaut, et rien ne les écrit.
+
+| Colonne | Pourquoi elle dort | Ce qui la réveillerait |
+| --- | --- | --- |
+| `property.marginal_tax_rate_ppm` | saisi, jamais lu | rendement net-net |
+| `property.cadastral_income` | saisi, jamais lu | calcul IPP automatique (Q24) |
+| `property.estimated_tax_yearly` | doublonnait une ligne de frais | rien : l'impôt est une ligne récurrente |
+| `property.region` | constante (Wallonie) | un calcul fiscal régionalisé |
+| `property.status` | doublonnait ce que les baux disent | rien |
+| `flow_line.category` | texte libre que rien n'agrégeait | répartition par poste, en liste fermée |
+
+Le raisonnement du choix : une colonne nullable que personne n'écrit ne coûte
+rien, alors qu'une migration rétroactive pour la faire revenir coûte cher. C'est
+l'inverse de ce que disaient les migrations 0005 à 0010, qui les supprimaient ;
+elles ont été écrasées dans `0000` et `0001` les remet.
+
+Le rendement net-net a quand même disparu de l'interface : il dépendait d'une
 estimation saisie à la main et divisait par un coût d'acquisition qui ignore le
-prêt.
-
-Si le calcul fiscal automatique arrive un jour (Q24), il faudra réintroduire le
-revenu cadastral et le taux marginal, et proposer le résultat comme montant
-d'une ligne de frais, pas comme un champ du bien.
+prêt. Le réintroduire demande de rebrancher les champs côté formulaire, pas côté
+schéma.
 
 ## Backlog
 
@@ -123,7 +146,9 @@ d'une ligne de frais, pas comme un champ du bien.
 - [ ] **Q21 · Plusieurs unités locatives par bien** : le bail se rattacherait à une
       unité plutôt qu'au bien. Impact schéma modéré.
 - [ ] **Q31 · Rappels et notifications** : échéance du précompte, indexation à
-      appliquer, fin de bail, entretien chaudière. Cron Vercel quotidien + e-mail.
+      appliquer, fin de bail, entretien chaudière. Le cron et l'envoi existent
+      depuis le rappel de retard ; il reste à décider ce que chacun de ces rappels
+      lit en base pour savoir qu'il est dû.
 - [ ] **Q8 · Taux variable** : la structure est déjà en place (`loan_rate_period`,
       une ligne par période) ; reste l'UI et les scénarios de révision.
 

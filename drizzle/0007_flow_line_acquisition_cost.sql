@@ -1,1 +1,0 @@
-ALTER TABLE "flow_line" ADD COLUMN "is_acquisition_cost" boolean DEFAULT false NOT NULL;

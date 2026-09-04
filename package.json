@@ -8,6 +8,7 @@
     "dev": "next dev",
     "prod": "dotenv -e .env.prod.local -- next dev -H 127.0.0.1 -p 3001",
     "build": "next build",
+    "build:deploy": "tsx scripts/deploy-migrate.mts && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

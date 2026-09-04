@@ -33,7 +33,7 @@ import {
 import { currentUser } from "@/lib/session";
 
 import { fieldErrors, nestFormData, succeeded, type ActionState } from "./form";
-import { acceptInvitation, createInvitation, isLastOwner } from "./members";
+import { acceptInvitation, createInvitation, isLastOwner, leaveProperty } from "./members";
 import { NotAuthorized, requireEditor, requireOwner } from "./properties";
 
 type Locale = (typeof routing.locales)[number];
@@ -556,6 +556,25 @@ export async function removeMemberAction(
     .where(and(eq(propertyMember.id, memberId), eq(propertyMember.propertyId, propertyId)));
 
   refresh();
+}
+
+/**
+ * Quitter un bien. Ni `requireOwner` ni `requireEditor` : il n'y a rien à
+ * vérifier au-delà d'être membre, et c'est `leaveProperty` qui le dit, dans la
+ * transaction où il retire la ligne.
+ */
+export async function leavePropertyAction(propertyId: string, formData: FormData): Promise<void> {
+  const locale = localeFrom(formData);
+  const user = await signedIn(locale);
+
+  // Le dernier propriétaire ne part pas, et l'écran ne le lui propose pas ; la
+  // garde est ici parce qu'une Server Action s'atteint aussi sans l'écran.
+  if ((await leaveProperty(propertyId, user.id)) !== "ok") {
+    throw new NotAuthorized();
+  }
+
+  refresh();
+  redirect({ href: "/", locale });
 }
 
 /**

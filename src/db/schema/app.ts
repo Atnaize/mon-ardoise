@@ -14,6 +14,23 @@ import {
 
 import { user } from "./auth";
 
+/*
+ * Champs dormants.
+ *
+ * Six colonnes ont été retirées du formulaire et de l'interface parce qu'elles
+ * étaient saisies sans qu'aucun calcul ne les lise. Elles restent en base, et
+ * donc ici : une colonne nullable que personne n'écrit ne coûte rien, alors
+ * qu'une migration rétroactive pour la faire revenir coûte cher.
+ *
+ * Elles sont volontairement absentes de `src/lib/schemas.ts`, des composants de
+ * `src/components/fields/` et de tout affichage. Rien ne les écrit aujourd'hui.
+ * Le jour où un calcul les consomme (le rendement net-net pour le taux marginal,
+ * l'IPP automatique pour le revenu cadastral, la répartition par poste pour la
+ * catégorie), il restera à les rebrancher côté formulaire, pas côté schéma.
+ */
+export const regionEnum = pgEnum("region", ["wallonie", "bruxelles", "flandre"]);
+export const propertyStatusEnum = pgEnum("property_status", ["preparing", "rented", "occupied"]);
+
 export const propertyTypeEnum = pgEnum("property_type", ["house", "apartment"]);
 export const memberRoleEnum = pgEnum("member_role", ["owner", "editor", "viewer"]);
 export const amortizationEnum = pgEnum("amortization", ["annuity", "constant_principal"]);
@@ -55,6 +72,12 @@ export const property = pgTable("property", {
   acquisitionDate: date("acquisition_date", { mode: "string" }),
   purchasePrice: integer("purchase_price"),
   currentValue: integer("current_value"),
+  /** Dormants, cf. l'en-tête du fichier. Nullables : rien ne les écrit. */
+  region: regionEnum("region"),
+  status: propertyStatusEnum("status"),
+  cadastralIncome: integer("cadastral_income"),
+  marginalTaxRatePpm: integer("marginal_tax_rate_ppm"),
+  estimatedTaxYearly: integer("estimated_tax_yearly"),
   valueGrowthRatePpm: integer("value_growth_rate_ppm").notNull().default(0),
   defaultInflationRatePpm: integer("default_inflation_rate_ppm").notNull().default(20_000),
   horizonYears: integer("horizon_years").notNull().default(20),
@@ -177,6 +200,8 @@ export const flowLine = pgTable(
       .references(() => property.id, { onDelete: "cascade" }),
     scenarioId: uuid("scenario_id").references(() => scenario.id, { onDelete: "cascade" }),
     kind: flowKindEnum("kind").notNull(),
+    /** Dormante, cf. l'en-tête du fichier. Reviendra en liste fermée, pas en texte libre. */
+    category: text("category"),
     label: text("label").notNull(),
     amount: integer("amount").notNull(),
     amountMode: amountModeEnum("amount_mode").notNull().default("fixed"),
@@ -239,3 +264,22 @@ export const actualEntry = pgTable(
     index("actual_entry_due_month_idx").on(t.propertyId, t.dueMonth),
   ],
 );
+
+/**
+ * Ce qui a déjà été rappelé, un état par destinataire. Le cron des retards de
+ * loyer tourne chaque jour ; sans mémoire, il enverrait le même message chaque
+ * matin.
+ *
+ * `signature` résume l'ardoise du destinataire au moment de l'envoi (voir
+ * `src/lib/reminders.ts`). Inchangée, le rappel attend la semaine suivante ;
+ * différente, il repart tout de suite, parce qu'il a du neuf à dire. La ligne est
+ * retirée dès que plus rien n'est en retard, pour que le retour du retard reparte
+ * d'un rappel immédiat.
+ */
+export const rentReminder = pgTable("rent_reminder", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  signature: text("signature").notNull(),
+  sentAt: timestamp("sent_at").notNull().defaultNow(),
+});

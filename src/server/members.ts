@@ -192,6 +192,46 @@ export async function acceptInvitation(
  * supprime plus : la dernière place de propriétaire est verrouillée, en
  * rétrogradation comme en retrait.
  */
+export type LeaveResult = "ok" | "notMember" | "lastOwner";
+
+/**
+ * Sortir de soi-même. Faire entrer et faire sortir quelqu'un sont des décisions
+ * du propriétaire ; rester n'en est pas une. Sans ça, un lecteur invité par
+ * erreur dépend de la bonne volonté d'un autre pour quitter un bien qu'il n'a
+ * jamais demandé à voir.
+ *
+ * Les membres sont verrouillés le temps de la transaction : deux derniers
+ * propriétaires qui partiraient en même temps laisseraient derrière eux un bien
+ * que personne ne peut plus régler ni supprimer.
+ */
+export async function leaveProperty(propertyId: string, userId: string): Promise<LeaveResult> {
+  return db.transaction(async (tx) => {
+    const members = await tx
+      .select({
+        id: propertyMember.id,
+        userId: propertyMember.userId,
+        role: propertyMember.role,
+      })
+      .from(propertyMember)
+      .where(eq(propertyMember.propertyId, propertyId))
+      .for("update");
+
+    const mine = members.find((member) => member.userId === userId);
+
+    if (!mine) {
+      return "notMember";
+    }
+
+    if (mine.role === "owner" && members.filter((member) => member.role === "owner").length === 1) {
+      return "lastOwner";
+    }
+
+    await tx.delete(propertyMember).where(eq(propertyMember.id, mine.id));
+
+    return "ok";
+  });
+}
+
 export async function isLastOwner(propertyId: string, memberId: string): Promise<boolean> {
   const owners = await db
     .select({ id: propertyMember.id })

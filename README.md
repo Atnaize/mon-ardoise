@@ -36,14 +36,21 @@ un champ ajouté dans `src/components/fields/` apparaît des deux côtés.
 
 **Lot 6 · Partage (livré, sauf la vue consolidée).** Un bien s'ouvre à une autre
 personne par un code d'invitation : le lien se copie et se transmet à la main, il
-n'y a aucun e-mail sortant. Trois rôles, appliqués partout (un lecteur ne voit plus les commandes
+n'y a pas d'e-mail d'invitation. Trois rôles, appliqués partout (un lecteur ne voit plus les commandes
 de saisie), et les deux quote-parts du schéma se saisissent enfin. Le rôle donne
 l'accès, la quote-part répartit l'argent : ce sont deux réglages distincts.
 
+**Rappel de retard (livré).** Un cron quotidien relit l'ardoise de chacun et
+envoie un e-mail à ceux qui ont un loyer en retard. C'est la moitié de Q31 qui ne
+demandait pas d'attendre le reste : l'ardoise cesse d'être passive.
+
+Toute suppression demande maintenant une confirmation, et on quitte un bien de
+soi-même sans passer par un propriétaire.
+
 **Ce qui n'y est pas encore :** l'UI des assurances et des remboursements
-anticipés (le schéma et le moteur les portent déjà), la confirmation avant
-suppression, les graphiques du lot 3, les scénarios du lot 4, et le suivi du réel
-sur les *frais* (seuls les loyers sont pointés).
+anticipés (le schéma et le moteur les portent déjà), les graphiques du lot 3, les
+scénarios du lot 4, le suivi du réel sur les *frais* (seuls les loyers sont
+pointés), et l'invitation par e-mail, qui a maintenant de quoi partir.
 
 ## Démarrer
 
@@ -67,6 +74,10 @@ le même driver des deux côtés, il n'y a rien d'autre à changer.
 | `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
 | `GOOGLE_CLIENT_ID` / `_SECRET` | Google Cloud Console → Credentials → OAuth client ID (Web) |
 
+Trois autres sont facultatives en local, et nécessaires en production pour que
+les rappels de retard partent : `RESEND_API_KEY`, `MAIL_FROM` et `CRON_SECRET`.
+Sans elles, le cron tourne, calcule, et n'envoie rien d'autre qu'une ligne de log.
+
 Redirect URI à déclarer côté Google : `http://localhost:3000/api/auth/callback/google`
 en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 
@@ -80,10 +91,12 @@ en local, et `https://<domaine-vercel>/api/auth/callback/google` en production.
 | `npm test` | Tests du moteur de calcul (Vitest) |
 | `npm run check:auth-schema` | Vérifie que le schéma Drizzle satisfait better-auth |
 | `npm run build` | Build de production |
+| `npm run build:deploy` | Migration puis build : le `buildCommand` de Vercel, pas une commande de poste |
 | `npm run db:up` | Démarre le Postgres local (docker compose) |
 | `npm run db:down` | Arrête le Postgres local, sans perdre les données |
 | `npm run db:generate` | Génère une migration SQL depuis le schéma |
-| `npm run db:migrate` | Applique les migrations |
+| `npm run db:migrate` | Applique les migrations sur la base locale |
+| `npm run db:migrate:prod` | Applique les migrations sur la base de production |
 | `npm run db:studio` | Explorateur Drizzle |
 
 ## Conventions non négociables
@@ -164,6 +177,60 @@ passe par `src/server/actions.ts`, qui valide avec les schémas Zod de
 `src/lib/schemas.ts` (les mêmes que le client), puis vérifie le rôle avant
 d'écrire.
 
+## Les rappels de retard
+
+Un cron Vercel appelle `GET /api/cron/rent-reminders` une fois par jour. La route
+ne s'ouvre qu'au `Bearer $CRON_SECRET` que Vercel envoie ; sans secret configuré,
+elle répond 404, parce qu'une URL qui envoie des e-mails ne s'ouvre pas par défaut.
+
+Le cron n'a pas de visiteur, mais il ne lit pas la base autrement que l'app :
+chaque destinataire passe par `listProperties`, filtré par appartenance comme la
+page d'accueil. Personne ne reçoit un chiffre qu'il ne pourrait pas afficher
+lui-même, et la règle 5 tient jusque dans le cron.
+
+Deux garde-fous, tous deux dans `src/lib/reminders.ts`, purs et sous tests :
+
+- **Le mois courant n'est un retard qu'à partir du 10.** L'ardoise le compte comme
+  dû dès le 1er, ce qui est juste pour un solde et faux pour un reproche.
+- **Un rappel identique ne repart pas le lendemain.** `rent_reminder` garde une
+  signature de l'ardoise par destinataire : inchangée, la relance attend une
+  semaine ; différente, elle part tout de suite, parce qu'elle a du neuf à dire.
+
+L'envoi passe par Resend en HTTP, sans SDK (`src/lib/mail.ts`), et en texte seul :
+un rappel tient en trois lignes et une URL. Sans `RESEND_API_KEY` ni `MAIL_FROM`,
+`sendEmail` ne lève pas, il log et rend `skipped` ; la mémoire de l'envoi n'est
+alors pas écrite, pour que le premier vrai rappel ne soit pas retardé par une
+semaine de messages fantômes.
+
+## Déploiement
+
+Vercel déploie sur push vers `master`. `vercel.json` remplace le build par
+`npm run build:deploy`, qui applique les migrations avant de builder.
+
+L'ordre est tout l'intérêt de le faire là : si la migration échoue, le build
+échoue, le déploiement est annulé et l'ancienne version reste en ligne. Un job
+GitHub Actions séparé ne donnerait pas cette garantie, parce qu'il tournerait en
+parallèle du déploiement Vercel : le code pourrait passer en ligne avant son
+schéma. C'est précisément la panne du 4 septembre 2026, `column
+"is_acquisition_cost" does not exist` sur une base restée deux migrations en
+arrière.
+
+`scripts/deploy-migrate.mts` ne migre que si `VERCEL_ENV=production`. Un
+déploiement de preview hérite des variables d'environnement de production tant
+qu'on ne lui en donne pas d'autres : sans ce test, chaque preview migrerait la
+base de prod, depuis une branche dont le schéma n'est pas validé.
+
+`CRON_SECRET` est à déclarer dans les variables d'environnement du projet
+Vercel : c'est lui que la plateforme envoie au cron, et sans lui la route reste
+fermée, donc les rappels ne partent pas.
+
+**Supprimer une colonne demandera deux déploiements** le jour où il y aura des
+utilisateurs. La migration s'applique pendant le build, donc avant la bascule :
+entre les deux, la version encore en ligne parle à un schéma déjà migré. Un
+ajout de colonne ne la gêne pas, un `DROP COLUMN` la casse. Il faut alors
+déployer d'abord le code qui cesse de lire la colonne, puis la migration qui la
+supprime.
+
 ## Stack
 
 Next.js 16 (App Router, Turbopack) · TypeScript strict · Tailwind CSS 4 ·
@@ -206,6 +273,16 @@ Deux écarts assumés par rapport au cadrage initial, décidés après vérifica
   de version de better-auth, s'il échoue : ajouter les champs, puis
   `npm run db:generate && npm run db:migrate`.
 - `drizzle-kit` est un CLI autonome : il ne charge pas `.env.local` comme le fait
-  Next. C'est `drizzle.config.ts` qui appelle `dotenv` explicitement, sur
-  `.env.local` puis `.env`. Sans ça, `db:migrate` échoue sur `url: ''`.
+  Next. Et `drizzle.config.ts` ne charge rien non plus, volontairement : c'est le
+  script npm qui désigne la cible (`db:migrate` vers `.env.local`,
+  `db:migrate:prod` vers `.env.prod.local`). Lire un `.env` ambiant rendrait la
+  cible implicite, et un fichier oublié contenant la connection string de prod
+  suffirait à migrer la prod sans le savoir. Sans `DATABASE_URL`, le config lève
+  une erreur explicite ; et il affiche toujours l'hôte visé avant d'agir.
+- **`drizzle/` repart d'une seule migration initiale, et c'est volontaire.** Les
+  onze migrations du développement initial ont été écrasées en une le
+  4 septembre 2026, quand la prod n'avait encore aucun utilisateur. L'opération
+  ne se refait qu'à ce prix : une base déjà migrée doit être vidée, parce que la
+  migration initiale recrée des tables qui existent déjà. À partir de là on
+  empile, et `0001` est la première de la pile.
 - Les icônes sont générées par `python3 scripts/generate-icons.py` (PIL).

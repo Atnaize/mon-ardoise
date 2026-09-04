@@ -63,7 +63,8 @@
     "tabsLabel": "Vues du bien",
     "backToList": "Mes biens",
     "tabRentDisabled": "Aucun bail encodé sur ce bien : rien n'est attendu, donc rien à pointer.",
-    "tabEditDisabled": "Lecture seule : seuls les éditeurs règlent le bien."
+    "tabEditDisabled": "Lecture seule : seuls les éditeurs règlent le bien.",
+    "deleteQuestion": "Supprimer {name} et tout ce qu'il contient ?"
   },
   "members": {
     "title": "Membres",
@@ -97,7 +98,11 @@
     "expiresOn": "expire le {date}",
     "copy": "Copier le lien",
     "copied": "Lien copié",
-    "revoke": "Révoquer"
+    "revoke": "Révoquer",
+    "leave": "Quitter",
+    "leaveTitle": "Quitter ce bien",
+    "leaveHint": "Tu n'y auras plus accès. Un propriétaire pourra t'inviter à nouveau.",
+    "leaveQuestion": "Quitter {name} ?"
   },
   "join": {
     "title": "Invitation",
@@ -261,7 +266,8 @@
     "cancel": "Annuler",
     "save": "Enregistrer",
     "back": "Retour aux biens",
-    "invalid": "Formulaire incomplet : corrige les champs signalés."
+    "invalid": "Formulaire incomplet : corrige les champs signalés.",
+    "irreversible": "Sans retour arrière."
   },
   "rent": {
     "title": "L'ardoise",
@@ -294,5 +300,13 @@
     "advance": "Payé d'avance",
     "advanceHint": "Encaissé pour des mois à venir · {total} encaissé au total",
     "none": "Aucun bail"
+  },
+  "reminder": {
+    "subjectOne": "Loyer en retard sur {property}",
+    "subjectMany": "Loyers en retard sur {count} biens",
+    "greeting": "Bonjour {name},",
+    "intro": "{count, plural, one {Un loyer attendu n'est pas arrivé.} other {Des loyers attendus ne sont pas arrivés.}}",
+    "line": "{property} : {amount} dû, {count, plural, one {# mois en retard} other {# mois en retard}}, depuis {since}.",
+    "footer": "{count, plural, one {Tu reçois ce message parce que tu suis ce bien sur Mon Ardoise.} other {Tu reçois ce message parce que tu suis ces biens sur Mon Ardoise.}} Le rappel revient une fois par semaine tant que l'ardoise n'est pas soldée."
   }
 }

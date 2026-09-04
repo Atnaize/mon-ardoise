@@ -1,1 +1,0 @@
-ALTER TABLE "property" DROP COLUMN "estimated_tax_yearly";

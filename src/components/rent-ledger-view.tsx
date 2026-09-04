@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-import { DeleteForm } from "@/components/forms/delete-form";
+import { ConfirmForm } from "@/components/forms/confirm-form";
 import { RentPaymentForm } from "@/components/forms/rent-payment-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
@@ -89,7 +89,7 @@ export async function RentLedgerView({
                               locale={locale}
                               label={t("editPayment")}
                             />
-                            <DeleteForm
+                            <ConfirmForm
                               action={deleteRentPaymentAction.bind(null, propertyId, payment.id)}
                               locale={locale}
                               label={t("deletePayment")}

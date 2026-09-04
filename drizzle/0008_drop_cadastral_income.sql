@@ -1,1 +1,0 @@
-ALTER TABLE "property" DROP COLUMN "cadastral_income";

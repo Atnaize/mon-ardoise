@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
 import { PropertyHeader } from "@/components/property-header";
-import { DeleteForm } from "@/components/forms/delete-form";
+import { ConfirmForm } from "@/components/forms/confirm-form";
 import { MembersSection } from "@/components/members-section";
 import { PropertyEditForm } from "@/components/property-edit-form";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -57,10 +57,13 @@ export default async function EditPropertyPage({
           <Card className="border-negative">
             <CardHeader title={t("property.dangerZone")} hint={t("property.dangerHint")} />
             <CardBody>
-              <DeleteForm
+              {/* Le bien est nommé dans la question : c'est ce qui distingue une
+                  confirmation d'un second clic au même endroit. */}
+              <ConfirmForm
                 action={deletePropertyAction.bind(null, id)}
                 locale={locale}
                 label={t("property.delete")}
+                question={t("property.deleteQuestion", { name: bundle.property.name })}
               />
             </CardBody>
           </Card>

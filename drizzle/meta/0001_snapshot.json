@@ -1,6 +1,6 @@
 {
-  "id": "83078a66-17b0-4f23-a3bd-2a8595ef13c3",
-  "prevId": "6e8b3763-6834-4263-ba68-949afc40035d",
+  "id": "52218af4-6756-441c-8060-d083dc315953",
+  "prevId": "6d79bf5b-7730-4856-8e23-9114d77cc28e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -380,14 +380,33 @@
           "primaryKey": false,
           "notNull": false
         },
+        "lease_id": {
+          "name": "lease_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "due_month": {
+          "name": "due_month",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_by": {
           "name": "created_by",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -406,6 +425,27 @@
             },
             {
               "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "actual_entry_due_month_idx": {
+          "name": "actual_entry_due_month_idx",
+          "columns": [
+            {
+              "expression": "property_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "due_month",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -444,6 +484,19 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
+        "actual_entry_lease_id_lease_id_fk": {
+          "name": "actual_entry_lease_id_lease_id_fk",
+          "tableFrom": "actual_entry",
+          "tableTo": "lease",
+          "columnsFrom": [
+            "lease_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
         "actual_entry_created_by_user_id_fk": {
           "name": "actual_entry_created_by_user_id_fk",
           "tableFrom": "actual_entry",
@@ -454,7 +507,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -498,7 +551,7 @@
           "name": "category",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "label": {
           "name": "label",
@@ -571,6 +624,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_acquisition_cost": {
+          "name": "is_acquisition_cost",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -1174,7 +1234,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'equivalent'"
+          "default": "'nominal_12'"
         }
       },
       "indexes": {},
@@ -1232,22 +1292,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "region": {
-          "name": "region",
-          "type": "region",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'wallonie'"
-        },
-        "status": {
-          "name": "status",
-          "type": "property_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'preparing'"
-        },
         "acquisition_date": {
           "name": "acquisition_date",
           "type": "date",
@@ -1260,34 +1304,46 @@
           "primaryKey": false,
           "notNull": false
         },
-        "cadastral_income": {
-          "name": "cadastral_income",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "current_value": {
           "name": "current_value",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "value_growth_rate_ppm": {
-          "name": "value_growth_rate_ppm",
+        "region": {
+          "name": "region",
+          "type": "region",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "property_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cadastral_income": {
+          "name": "cadastral_income",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": 0
+          "notNull": false
         },
         "marginal_tax_rate_ppm": {
           "name": "marginal_tax_rate_ppm",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": 500000
+          "notNull": false
         },
         "estimated_tax_yearly": {
           "name": "estimated_tax_yearly",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "value_growth_rate_ppm": {
+          "name": "value_growth_rate_ppm",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1311,7 +1367,7 @@
           "name": "created_by",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -1340,7 +1396,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -1459,6 +1515,52 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rent_reminder": {
+      "name": "rent_reminder",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "signature": {
+          "name": "signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "rent_reminder_user_id_user_id_fk": {
+          "name": "rent_reminder_user_id_user_id_fk",
+          "tableFrom": "rent_reminder",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

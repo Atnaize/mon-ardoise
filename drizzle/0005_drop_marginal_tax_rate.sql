@@ -1,1 +1,0 @@
-ALTER TABLE "property" DROP COLUMN "marginal_tax_rate_ppm";

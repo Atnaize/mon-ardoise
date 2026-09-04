@@ -12,71 +12,8 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1788355956841,
-      "tag": "0001_account_issuer",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1788357468736,
-      "tag": "0002_rate_basis_default",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1788359195338,
-      "tag": "0003_created_by_set_null",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1788361378986,
-      "tag": "0004_actual_entry_rent_tracking",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1788361546938,
-      "tag": "0005_drop_marginal_tax_rate",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1788362119757,
-      "tag": "0006_drop_flow_line_category",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1788362353022,
-      "tag": "0007_flow_line_acquisition_cost",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1788362981772,
-      "tag": "0008_drop_cadastral_income",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1788424093687,
-      "tag": "0009_drop_estimated_tax",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1788528583174,
-      "tag": "0010_drop_property_region_status",
+      "when": 1788535384465,
+      "tag": "0001_dormant_fields_and_reminders",
       "breakpoints": true
     }
   ]

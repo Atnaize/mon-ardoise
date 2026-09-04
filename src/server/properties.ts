@@ -151,8 +151,7 @@ export function projectBundle(bundle: PropertyBundle) {
 export interface PropertySummary {
   bundle: PropertyBundle;
   indicators: Indicators;
-  outstandingRent: number;
-  overdueCount: number;
+  ledger: RentLedger;
 }
 
 export async function listProperties(userId: string): Promise<PropertySummary[]> {
@@ -167,16 +166,11 @@ export async function listProperties(userId: string): Promise<PropertySummary[]>
 
   return [...bundles.values()]
     .sort((a, b) => a.property.name.localeCompare(b.property.name))
-    .map((bundle) => {
-      const ledger = ledgerFor(bundle, payments.get(bundle.property.id) ?? []);
-
-      return {
-        bundle,
-        indicators: projectBundle(bundle).indicators,
-        outstandingRent: ledger.outstanding,
-        overdueCount: ledger.overdueMonths.length,
-      };
-    });
+    .map((bundle) => ({
+      bundle,
+      indicators: projectBundle(bundle).indicators,
+      ledger: ledgerFor(bundle, payments.get(bundle.property.id) ?? []),
+    }));
 }
 
 export async function loadProjection(userId: string, propertyId: string) {

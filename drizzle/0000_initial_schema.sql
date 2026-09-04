@@ -9,13 +9,12 @@ CREATE TYPE "public"."member_role" AS ENUM('owner', 'editor', 'viewer');--> stat
 CREATE TYPE "public"."penalty_mode" AS ENUM('months_of_interest', 'percent', 'fixed', 'none');--> statement-breakpoint
 CREATE TYPE "public"."premium_mode" AS ENUM('in_payment', 'annual', 'quarterly', 'single_financed');--> statement-breakpoint
 CREATE TYPE "public"."prepayment_effect" AS ENUM('reduce_term', 'reduce_payment');--> statement-breakpoint
-CREATE TYPE "public"."property_status" AS ENUM('preparing', 'rented', 'occupied');--> statement-breakpoint
 CREATE TYPE "public"."property_type" AS ENUM('house', 'apartment');--> statement-breakpoint
 CREATE TYPE "public"."rate_basis" AS ENUM('equivalent', 'nominal_12');--> statement-breakpoint
 CREATE TYPE "public"."recurrence" AS ENUM('one_off', 'monthly', 'quarterly', 'yearly', 'every_n_years');--> statement-breakpoint
-CREATE TYPE "public"."region" AS ENUM('wallonie', 'bruxelles', 'flandre');--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
+	"issuer" text NOT NULL,
 	"account_id" text NOT NULL,
 	"provider_id" text NOT NULL,
 	"user_id" text NOT NULL,
@@ -72,8 +71,11 @@ CREATE TABLE "actual_entry" (
 	"label" text NOT NULL,
 	"amount" integer NOT NULL,
 	"flow_line_id" uuid,
-	"created_by" text NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"lease_id" uuid,
+	"due_month" integer,
+	"created_by" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "flow_line" (
@@ -81,7 +83,6 @@ CREATE TABLE "flow_line" (
 	"property_id" uuid NOT NULL,
 	"scenario_id" uuid,
 	"kind" "flow_kind" NOT NULL,
-	"category" text NOT NULL,
 	"label" text NOT NULL,
 	"amount" integer NOT NULL,
 	"amount_mode" "amount_mode" DEFAULT 'fixed' NOT NULL,
@@ -93,6 +94,7 @@ CREATE TABLE "flow_line" (
 	"indexation_month" integer,
 	"capitalize" boolean DEFAULT false NOT NULL,
 	"amortization_years" integer,
+	"is_acquisition_cost" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -164,7 +166,7 @@ CREATE TABLE "loan_rate_period" (
 	"loan_id" uuid NOT NULL,
 	"start_month" integer DEFAULT 0 NOT NULL,
 	"annual_rate_ppm" integer NOT NULL,
-	"rate_basis" "rate_basis" DEFAULT 'equivalent' NOT NULL,
+	"rate_basis" "rate_basis" DEFAULT 'nominal_12' NOT NULL,
 	CONSTRAINT "loan_rate_period_loan_id_start_month_unique" UNIQUE("loan_id","start_month")
 );
 --> statement-breakpoint
@@ -172,18 +174,13 @@ CREATE TABLE "property" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
 	"type" "property_type" NOT NULL,
-	"region" "region" DEFAULT 'wallonie' NOT NULL,
-	"status" "property_status" DEFAULT 'preparing' NOT NULL,
 	"acquisition_date" date,
 	"purchase_price" integer,
-	"cadastral_income" integer,
 	"current_value" integer,
 	"value_growth_rate_ppm" integer DEFAULT 0 NOT NULL,
-	"marginal_tax_rate_ppm" integer DEFAULT 500000 NOT NULL,
-	"estimated_tax_yearly" integer DEFAULT 0 NOT NULL,
 	"default_inflation_rate_ppm" integer DEFAULT 20000 NOT NULL,
 	"horizon_years" integer DEFAULT 20 NOT NULL,
-	"created_by" text NOT NULL,
+	"created_by" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -213,7 +210,8 @@ ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "actual_entry" ADD CONSTRAINT "actual_entry_property_id_property_id_fk" FOREIGN KEY ("property_id") REFERENCES "public"."property"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "actual_entry" ADD CONSTRAINT "actual_entry_flow_line_id_flow_line_id_fk" FOREIGN KEY ("flow_line_id") REFERENCES "public"."flow_line"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "actual_entry" ADD CONSTRAINT "actual_entry_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "actual_entry" ADD CONSTRAINT "actual_entry_lease_id_lease_id_fk" FOREIGN KEY ("lease_id") REFERENCES "public"."lease"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "actual_entry" ADD CONSTRAINT "actual_entry_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "flow_line" ADD CONSTRAINT "flow_line_property_id_property_id_fk" FOREIGN KEY ("property_id") REFERENCES "public"."property"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "flow_line" ADD CONSTRAINT "flow_line_scenario_id_scenario_id_fk" FOREIGN KEY ("scenario_id") REFERENCES "public"."scenario"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitation" ADD CONSTRAINT "invitation_property_id_property_id_fk" FOREIGN KEY ("property_id") REFERENCES "public"."property"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -223,11 +221,12 @@ ALTER TABLE "loan" ADD CONSTRAINT "loan_property_id_property_id_fk" FOREIGN KEY 
 ALTER TABLE "loan_insurance" ADD CONSTRAINT "loan_insurance_loan_id_loan_id_fk" FOREIGN KEY ("loan_id") REFERENCES "public"."loan"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "loan_prepayment" ADD CONSTRAINT "loan_prepayment_loan_id_loan_id_fk" FOREIGN KEY ("loan_id") REFERENCES "public"."loan"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "loan_rate_period" ADD CONSTRAINT "loan_rate_period_loan_id_loan_id_fk" FOREIGN KEY ("loan_id") REFERENCES "public"."loan"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "property" ADD CONSTRAINT "property_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "property" ADD CONSTRAINT "property_created_by_user_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "property_member" ADD CONSTRAINT "property_member_property_id_property_id_fk" FOREIGN KEY ("property_id") REFERENCES "public"."property"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "property_member" ADD CONSTRAINT "property_member_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "scenario" ADD CONSTRAINT "scenario_property_id_property_id_fk" FOREIGN KEY ("property_id") REFERENCES "public"."property"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "actual_entry_property_date_idx" ON "actual_entry" USING btree ("property_id","date");--> statement-breakpoint
+CREATE INDEX "actual_entry_due_month_idx" ON "actual_entry" USING btree ("property_id","due_month");--> statement-breakpoint
 CREATE INDEX "flow_line_property_idx" ON "flow_line" USING btree ("property_id","scenario_id");--> statement-breakpoint
 CREATE INDEX "lease_property_idx" ON "lease" USING btree ("property_id");--> statement-breakpoint
 CREATE INDEX "loan_property_idx" ON "loan" USING btree ("property_id");--> statement-breakpoint

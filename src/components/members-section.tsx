@@ -1,26 +1,15 @@
 import { getTranslations } from "next-intl/server";
 
-import { DeleteForm } from "@/components/forms/delete-form";
+import { ConfirmForm } from "@/components/forms/confirm-form";
 import { InvitationForm } from "@/components/forms/invitation-form";
 import { MemberForm } from "@/components/forms/member-form";
 import { InvitationLink } from "@/components/invitation-link";
 import { Section, SectionItem, SectionList } from "@/components/ui/section";
+import { appUrl } from "@/lib/urls";
 import { removeMemberAction, revokeInvitationAction } from "@/server/actions";
 import { listMembers, pendingInvitations, type MemberView } from "@/server/members";
 
 const ROLE_KEY = { owner: "roleOwner", editor: "roleEditor", viewer: "roleViewer" } as const;
-
-/**
- * L'URL qu'on copie doit être absolue : elle part dans un message, pas dans une
- * navigation. `BETTER_AUTH_URL` est déjà l'adresse canonique de l'app, celle que
- * Google connaît comme origine de redirection ; s'en servir évite d'en déclarer
- * une seconde qui pourrait diverger.
- */
-function joinUrl(code: string, locale: string): string {
-  const base = process.env.BETTER_AUTH_URL?.replace(/\/+$/, "") ?? "";
-
-  return `${base}/${locale}/join/${code}`;
-}
 
 /**
  * Une seule quote-part affichée quand les deux coïncident, ce qui est le cas
@@ -93,7 +82,7 @@ export async function MembersSection({
                     {/* Le dernier propriétaire ne se retire pas : sans lui, plus
                         personne ne règle ni ne supprime le bien. */}
                     {lastOwner ? null : (
-                      <DeleteForm
+                      <ConfirmForm
                         action={removeMemberAction.bind(null, propertyId, member.id)}
                         locale={locale}
                         label={t("remove")}
@@ -123,7 +112,7 @@ export async function MembersSection({
             {invitations.map((entry) => (
               <SectionItem
                 key={entry.id}
-                title={<InvitationLink code={entry.code} url={joinUrl(entry.code, locale)} />}
+                title={<InvitationLink code={entry.code} url={appUrl(`/${locale}/join/${entry.code}`)} />}
                 detail={`${t(ROLE_KEY[entry.role])} · ${
                   entry.email ? t("forEmail", { email: entry.email }) : t("forAnyone")
                 } · ${t("expiresOn", {
@@ -133,7 +122,7 @@ export async function MembersSection({
                   }),
                 })}`}
                 actions={
-                  <DeleteForm
+                  <ConfirmForm
                     action={revokeInvitationAction.bind(null, propertyId, entry.id)}
                     locale={locale}
                     label={t("revoke")}

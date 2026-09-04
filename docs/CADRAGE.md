@@ -138,7 +138,7 @@ chaîne pour éviter les décalages de fuseau.
 
 | Table | Rôle | Champs notables |
 | --- | --- | --- |
-| `property` | le bien | `status` (preparing / rented / occupied), `cadastral_income`, `estimated_tax_yearly`, `horizon_years` |
+| `property` | le bien | `horizon_years`, `value_growth_rate_ppm` ; plus les champs dormants `status`, `region`, `cadastral_income`, `marginal_tax_rate_ppm`, `estimated_tax_yearly`, hors interface (voir TODO.md) |
 | `property_member` | accès **et** quote-part | `role`, `ownership_share_permille`, `contribution_share_permille` |
 | `invitation` | partage d'un bien | `email` ou `code`, `role`, `expires_at` |
 | `loan` | un par crédit : le prêt hypothécaire et le mandat sont deux lignes | `principal`, `term_months`, `amortization`, `deferral_months`, `deferral_type` |
